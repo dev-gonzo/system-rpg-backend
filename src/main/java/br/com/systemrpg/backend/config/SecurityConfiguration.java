@@ -62,6 +62,7 @@ public class SecurityConfiguration {
          * e configuração do servidor de recursos OAuth2 com JWT.
          */
         @Bean
+        @SuppressWarnings("java:S4502") // Suprime warning CSRF - justificado para API REST stateless
         SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
             http
                     .authorizeHttpRequests(authorize -> authorize
@@ -82,20 +83,15 @@ public class SecurityConfiguration {
                             // Todos os outros endpoints precisam de autenticação
                             .anyRequest().authenticated()
                     )
-                    /**
-                      * CSRF PROTECTION DISABLED - JUSTIFICATIVA DE SEGURANÇA:
-                      * 
-                      * 1. Esta é uma API REST stateless que usa autenticação JWT
-                      * 2. Não utilizamos cookies de sessão (session cookies)
-                      * 3. Tokens JWT são enviados via Authorization header
-                      * 4. CSRF attacks requerem cookies de sessão para funcionar
-                      * 5. Sem cookies de sessão, não há vetor de ataque CSRF
-                      * 
-                      * SONARQUBE: Esta configuração é SEGURA para APIs REST stateless.
-                      * Referência: OWASP CSRF Prevention Cheat Sheet
-                      */
-                     @SuppressWarnings("java:S4502") // Suprime warning CSRF - justificado para API REST stateless
-                     .csrf(AbstractHttpConfigurer::disable)
+                    // CSRF PROTECTION DISABLED - JUSTIFICATIVA DE SEGURANÇA:
+                    // 1. Esta é uma API REST stateless que usa autenticação JWT
+                    // 2. Não utilizamos cookies de sessão (session cookies)
+                    // 3. Tokens JWT são enviados via Authorization header
+                    // 4. CSRF attacks requerem cookies de sessão para funcionar
+                    // 5. Sem cookies de sessão, não há vetor de ataque CSRF
+                    // SONARQUBE: Esta configuração é SEGURA para APIs REST stateless.
+                    // Referência: OWASP CSRF Prevention Cheat Sheet
+                    .csrf(AbstractHttpConfigurer::disable)
                     // CORS configurado via propriedades - seguro para produção
                     // Configuração via application.properties ou variáveis de ambiente
                     .cors(cors -> cors.configurationSource(request -> {
