@@ -45,7 +45,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
-        // Desabilite explicitamente o tratamento de recursos estáticos para caminhos /auth/**
+        // Desabilite explicitamente o tratamento de recursos estáticos para caminhos /api/**
         registry.setOrder(Integer.MAX_VALUE);
     }
 

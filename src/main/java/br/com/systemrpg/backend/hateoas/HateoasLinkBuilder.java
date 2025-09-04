@@ -22,7 +22,7 @@ public class HateoasLinkBuilder {
     @Value("${app.base-url:http://localhost:8080}")
     private String defaultBaseUrl;
     
-    @Value("${app.api.v1.path:/auth/api/v1}")
+    @Value("${app.api.v1.path:/api/v1}")
     private String apiV1Path;
     
     private static final String USERS_PATH = "/users";
