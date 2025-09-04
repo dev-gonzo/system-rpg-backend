@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: systemrpg-backend-postgres
+    environment:
+      POSTGRES_DB: systemrpg_backend_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"  # Porta externa 5433 para evitar conflitos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - systemrpg-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d systemrpg_backend_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Aplicação Spring Boot
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: systemrpg-backend-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: systemrpg_backend_db
+      DB_USERNAME: auth_user
+      DB_PASSWORD: auth_password
+      JWT_SECRET: myDockerSecretKey123456789
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - systemrpg-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/users"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # PgAdmin para administração do banco (opcional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: systemrpg-backend-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@systemrpg.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"  # Acesso via http://localhost:5050
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - systemrpg-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - admin  # Executar apenas com: docker-compose --profile admin up
+
+volumes:
+  postgres_data:
+    driver: local
+  app_logs:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  systemrpg-network:
+    driver: bridge
+    name: systemrpg-backend-network

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProfile name="!prod">
+        <!-- Console Appender para desenvolvimento -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] [%X{operation:-}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="prod">
+        <!-- Console Appender para produção -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] [%X{operation:-}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- File Appender para logs de aplicação -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/systemrpg-backend.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/systemrpg-backend.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] [%X{operation:-}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File Appender para logs de erro -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/systemrpg-backend-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/systemrpg-backend-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+                <maxFileSize>50MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] [%X{operation:-}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File Appender para logs de auditoria -->
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/systemrpg-backend-audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/systemrpg-backend-audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+                <maxFileSize>50MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] [%X{operation:-}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logger específico para auditoria -->
+    <logger name="AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT_FILE"/>
+    </logger>
+
+    <!-- Loggers específicos para controle de nível -->
+    <logger name="br.com.systemrpg" level="DEBUG"/>
+    <logger name="br.com.systemrpg.backend.config.JwtAuthenticationFilter" level="DEBUG"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    <logger name="org.flywaydb" level="INFO"/>
+
+    <!-- Root logger -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+</configuration>
