@@ -16,16 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementação do UserDetailsService para autenticação Spring Security.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
     private final UserRepository userRepository;
     private final MessageSource messageSource;
 

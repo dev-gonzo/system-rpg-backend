@@ -1,6 +1,6 @@
 package br.com.systemrpg.backend.dto.hateoas;
 
-import br.com.systemrpg.backend.dto.response.RoleResponse;
+import br.com.systemrpg.backend.dto.response.UserResponse;
 import br.com.systemrpg.backend.hateoas.HateoasResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,11 +11,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO HATEOAS para resposta de usuário.
+ * DTO HATEOAS para resposta de grupos de jogo.
  */
 @Data
 @SuperBuilder
@@ -23,25 +22,35 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserHateoasResponse extends HateoasResponse {
+public class GameGroupHateoasResponse extends HateoasResponse {
     
     private UUID id;
     
-    private String username;
+    private String campaignName;
     
-    private String email;
+    private String description;
     
-    private String firstName;
+    private String gameSystem;
     
-    private String lastName;
+    private String settingWorld;
     
-    private String fullName;
+    private String accessRule; // FREE, FRIENDS, APPROVAL
     
-    private List<RoleResponse> roles;
+    private String modality; // ONLINE, PRESENCIAL
+    
+    private Integer maxParticipants;
+    
+    private Integer currentParticipants;
+    
+    private String location;
+    
+    private String rules;
+    
+    private String notes;
     
     private Boolean isActive;
     
-    private Boolean isEmailVerified;
+    private UserResponse createdBy;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -50,8 +59,10 @@ public class UserHateoasResponse extends HateoasResponse {
     private LocalDateTime updatedAt;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime lastLoginAt;
-    
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime passwordChangedAt;
+    private LocalDateTime deletedAt;
+
+    // Getter manual para resolver problemas do Lombok
+    public UUID getId() {
+        return id;
+    }
 }

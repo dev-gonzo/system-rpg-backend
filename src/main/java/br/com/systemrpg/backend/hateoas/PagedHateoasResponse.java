@@ -24,5 +24,28 @@ public class PagedHateoasResponse<T> extends HateoasResponse {
 
     @JsonProperty("page")
     private PageInfo page;
+    
+    public PagedHateoasResponse(List<T> content, PageInfo page) {
+        this.content = content;
+        this.page = page;
+    }
+
+    // Getters manuais para resolver problemas do Lombok
+    public List<T> getContent() {
+        return content;
+    }
+    
+    public PageInfo getPage() {
+        return page;
+    }
+    
+    // Setters manuais para resolver problemas do Lombok
+    public void setContent(List<T> content) {
+        this.content = content;
+    }
+    
+    public void setPage(PageInfo page) {
+        this.page = page;
+    }
 
 }

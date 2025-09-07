@@ -2,12 +2,12 @@ package br.com.systemrpg.backend.controller;
 
 import java.util.UUID;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import br.com.systemrpg.backend.util.ResponseUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,18 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.systemrpg.backend.domain.entity.User;
 import br.com.systemrpg.backend.dto.UserCreateRequest;
-import br.com.systemrpg.backend.dto.UserResponse;
 import br.com.systemrpg.backend.dto.UserUpdateRequest;
 import br.com.systemrpg.backend.dto.hateoas.UserHateoasResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
 import br.com.systemrpg.backend.dto.response.AvailabilityResponse;
+import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.UserResponse;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
 import br.com.systemrpg.backend.mapper.UserHateoasMapper;
 import br.com.systemrpg.backend.mapper.UserMapper;
 import br.com.systemrpg.backend.service.UserService;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
+import br.com.systemrpg.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,7 +47,7 @@ import lombok.RequiredArgsConstructor;
  * Controller para gerenciamento de usuários.
  */
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "User Management", description = "Endpoints para gerenciamento de usuários")

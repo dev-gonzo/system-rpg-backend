@@ -2,9 +2,9 @@ package br.com.systemrpg.backend.mapper;
 
 import br.com.systemrpg.backend.domain.entity.Role;
 import br.com.systemrpg.backend.domain.entity.User;
-import br.com.systemrpg.backend.dto.RoleResponse;
+import br.com.systemrpg.backend.dto.response.RoleResponse;
 import br.com.systemrpg.backend.dto.UserCreateRequest;
-import br.com.systemrpg.backend.dto.UserResponse;
+import br.com.systemrpg.backend.dto.response.UserResponse;
 import br.com.systemrpg.backend.dto.UserUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

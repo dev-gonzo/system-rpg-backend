@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import br.com.systemrpg.backend.util.MessageUtil;
 import br.com.systemrpg.backend.util.TokenValidationUtil;
-import br.com.systemrpg.backend.constants.ValidationConstants;
 
 /**
  * Filtro JWT para interceptar e validar tokens de autenticação.
@@ -39,8 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final String DEFAULT_AUTHORITY = "USER";
-    private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String ROLE_PREFIX = "ROLE_";
     private static final String ROLES_CLAIM = "roles";
     private static final String USER_ID_ATTRIBUTE = "userId";
@@ -241,14 +238,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
 
         List<String> publicEndpoints = List.of(
-            "/login",
-            "/logout",
-            "/users/register",
-            "/users/check-username",
-            "/users/check-email",
+            "/api/v1/auth/login",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/users/register",
+            "/api/v1/users/check-username",
+            "/api/v1/users/check-email",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/introspect",
             "/actuator",
-            "/refresh",
-            "/introspect",
             "/swagger-ui",
             "/swagger-ui.html",
             "/swagger-resources",

@@ -26,23 +26,36 @@ public class TokenIntrospectResponse {
     
     private String error;
     
+    // Setters manuais para resolver problemas do Lombok
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+    
+    public void setClaims(Map<String, Object> claims) {
+        this.claims = claims;
+    }
+    
+    public void setError(String error) {
+        this.error = error;
+    }
+    
     /**
      * Cria uma resposta para token ativo.
      */
     public static TokenIntrospectResponse active(Map<String, Object> claims) {
-        return TokenIntrospectResponse.builder()
-                .active(true)
-                .claims(claims)
-                .build();
+        TokenIntrospectResponse response = new TokenIntrospectResponse();
+        response.setActive(true);
+        response.setClaims(claims);
+        return response;
     }
     
     /**
      * Cria uma resposta para token inativo.
      */
     public static TokenIntrospectResponse inactive(String error) {
-        return TokenIntrospectResponse.builder()
-                .active(false)
-                .error(error)
-                .build();
+        TokenIntrospectResponse response = new TokenIntrospectResponse();
+        response.setActive(false);
+        response.setError(error);
+        return response;
     }
 }

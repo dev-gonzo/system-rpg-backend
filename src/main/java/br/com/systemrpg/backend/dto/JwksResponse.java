@@ -30,21 +30,26 @@ public class JwksResponse {
     @JsonProperty("keys")
     private List<JwkKey> keys;
     
+    // Setters manuais para resolver problemas do Lombok
+    public void setKeys(List<JwkKey> keys) {
+        this.keys = keys;
+    }
+    
     /**
      * Cria uma resposta JWKS com uma lista de chaves.
      */
     public static JwksResponse of(List<JwkKey> keys) {
-        return JwksResponse.builder()
-                .keys(keys)
-                .build();
+        JwksResponse response = new JwksResponse();
+        response.setKeys(keys);
+        return response;
     }
     
     /**
      * Cria uma resposta JWKS com uma única chave.
      */
     public static JwksResponse of(JwkKey key) {
-        return JwksResponse.builder()
-                .keys(Arrays.asList(key))
-                .build();
+        JwksResponse response = new JwksResponse();
+        response.setKeys(Arrays.asList(key));
+        return response;
     }
 }

@@ -1,7 +1,6 @@
-package br.com.systemrpg.backend.dto;
+package br.com.systemrpg.backend.dto.response;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -12,39 +11,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO para resposta de usuários.
+ * DTO para resposta de roles.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
+public class RoleResponse {
 
     private UUID id;
     
-    private String username;
+    private String name;
     
-    private String email;
-    
-    private String firstName;
-    
-    private String lastName;
+    private String description;
     
     private Boolean isActive;
-    
-    private Boolean isEmailVerified;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
-    
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime lastLoginAt;
-    
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime passwordChangedAt;
-    
-    private Set<RoleResponse> roles;
 }

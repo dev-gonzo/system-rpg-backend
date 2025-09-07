@@ -1,30 +1,26 @@
-package br.com.systemrpg.backend.dto.hateoas;
-
-import br.com.systemrpg.backend.dto.response.RoleResponse;
-import br.com.systemrpg.backend.hateoas.HateoasResponse;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+package br.com.systemrpg.backend.dto.response;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import br.com.systemrpg.backend.dto.response.RoleResponse;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
- * DTO HATEOAS para resposta de usuário.
+ * DTO para resposta de usuários.
  */
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserHateoasResponse extends HateoasResponse {
-    
+public class UserResponse {
+
     private UUID id;
     
     private String username;
@@ -34,10 +30,6 @@ public class UserHateoasResponse extends HateoasResponse {
     private String firstName;
     
     private String lastName;
-    
-    private String fullName;
-    
-    private List<RoleResponse> roles;
     
     private Boolean isActive;
     
@@ -54,4 +46,6 @@ public class UserHateoasResponse extends HateoasResponse {
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime passwordChangedAt;
+    
+    private Set<RoleResponse> roles;
 }

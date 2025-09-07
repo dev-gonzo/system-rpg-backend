@@ -1,7 +1,7 @@
 package br.com.systemrpg.backend.mapper;
 
-import br.com.systemrpg.backend.dto.RoleResponse;
-import br.com.systemrpg.backend.dto.UserResponse;
+import br.com.systemrpg.backend.dto.response.RoleResponse;
+import br.com.systemrpg.backend.dto.response.UserResponse;
 import br.com.systemrpg.backend.dto.hateoas.UserHateoasResponse;
 import br.com.systemrpg.backend.hateoas.PageInfo;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;

@@ -1,7 +1,7 @@
 package br.com.systemrpg.backend.mapper;
 
-import br.com.systemrpg.backend.dto.response.UserResponse;
-import br.com.systemrpg.backend.dto.hateoas.UserHateoasResponse;
+import br.com.systemrpg.backend.dto.hateoas.GameGroupHateoasResponse;
+import br.com.systemrpg.backend.dto.response.GameGroupResponse;
 import br.com.systemrpg.backend.hateoas.PageInfo;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
 import org.mapstruct.Mapper;
@@ -12,28 +12,28 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 /**
- * Mapper para conversão entre UserResponse e UserHateoasResponse.
+ * Mapper para conversão entre GameGroupResponse e GameGroupHateoasResponse.
  */
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface UserHateoasMapper {
+public interface GameGroupHateoasMapper {
     
     /**
-     * Converte UserResponse para UserHateoasResponse.
+     * Converte GameGroupResponse para GameGroupHateoasResponse.
      */
     @Mapping(target = "links", ignore = true)
-    @Mapping(target = "fullName", expression = "java(userResponse.getFirstName() + \" \" + userResponse.getLastName())")
-    UserHateoasResponse toHateoasResponse(UserResponse userResponse);
+    @Mapping(target = "createdBy", ignore = true)
+    GameGroupHateoasResponse toHateoasResponse(GameGroupResponse gameGroupResponse);
     
     /**
-     * Converte lista de UserResponse para lista de UserHateoasResponse.
+     * Converte lista de GameGroupResponse para lista de GameGroupHateoasResponse.
      */
-    List<UserHateoasResponse> toHateoasResponseList(List<UserResponse> userResponses);
-    
+    List<GameGroupHateoasResponse> toHateoasResponseList(List<GameGroupResponse> gameGroupResponses);
+
     /**
-     * Converte Page<UserResponse> para PagedHateoasResponse<UserHateoasResponse>.
+     * Converte Page<GameGroupResponse> para PagedHateoasResponse<GameGroupHateoasResponse>.
      */
-    default PagedHateoasResponse<UserHateoasResponse> toPagedHateoasResponse(Page<UserResponse> page) {
-        List<UserHateoasResponse> content = toHateoasResponseList(page.getContent());
+    default PagedHateoasResponse<GameGroupHateoasResponse> toPagedHateoasResponse(Page<GameGroupResponse> page) {
+        List<GameGroupHateoasResponse> content = toHateoasResponseList(page.getContent());
         
         PageInfo pageInfo = new PageInfo();
         pageInfo.setNumber(page.getNumber());
@@ -48,4 +48,5 @@ public interface UserHateoasMapper {
         
         return new PagedHateoasResponse<>(content, pageInfo);
     }
+
 }
