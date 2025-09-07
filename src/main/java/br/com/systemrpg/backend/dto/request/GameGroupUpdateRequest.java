@@ -31,21 +31,41 @@ public class GameGroupUpdateRequest {
     @Size(max = 100, message = "{validation.settingWorld.size}")
     private String settingWorld;
 
+    @NotBlank(message = "{validation.shortDescription.required}")
+    @Size(min = 3, max = 100, message = "{validation.shortDescription.size}")
+    private String shortDescription;
+
+    @NotNull(message = "{validation.visibility.required}")
+    private String visibility; // PUBLIC, FRIENDS, PRIVATE
+
     @NotNull(message = "{validation.accessRule.required}")
-    private Integer accessRule; // 0-free, 1-friends, 2-approval
+    private String accessRule; // FREE, FRIENDS, APPROVAL
 
     @NotNull(message = "{validation.modality.required}")
-    private Integer modality; // 0-online, 1-presencial
+    private String modality; // ONLINE, PRESENCIAL
 
-    @NotNull(message = "{validation.maxParticipants.required}")
-    private Integer maxParticipants;
+    private Integer minPlayers;
 
-    @Size(max = 200, message = "{validation.location.size}")
-    private String location;
+    private Integer maxPlayers;
 
-    @Size(max = 1000, message = "{validation.rules.size}")
-    private String rules;
+    @Size(max = 100, message = "{validation.country.size}")
+    private String country;
 
-    @Size(max = 1000, message = "{validation.notes.size}")
-    private String notes;
+    @Size(max = 100, message = "{validation.state.size}")
+    private String state;
+
+    @Size(max = 100, message = "{validation.city.size}")
+    private String city;
+
+    @Size(max = 500, message = "{validation.themesContent.size}")
+    private String themesContent;
+
+    @Size(max = 500, message = "{validation.punctualityAttendance.size}")
+    private String punctualityAttendance;
+
+    @Size(max = 500, message = "{validation.houseRules.size}")
+    private String houseRules;
+
+    @Size(max = 500, message = "{validation.behavioralExpectations.size}")
+    private String behavioralExpectations;
 }

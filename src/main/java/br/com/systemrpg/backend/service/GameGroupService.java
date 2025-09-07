@@ -104,6 +104,7 @@ public class GameGroupService {
 
         // Configura valores padrão
         gameGroup.setIsActive(true);
+        gameGroup.setCreatedBy(creatorUserId);
         gameGroup.setCreatedAt(LocalDateTime.now());
         gameGroup.setUpdatedAt(LocalDateTime.now());
 
@@ -157,14 +158,44 @@ public class GameGroupService {
         if (gameGroupUpdate.getSettingWorld() != null) {
             existingGroup.setSettingWorld(gameGroupUpdate.getSettingWorld());
         }
+        if (gameGroupUpdate.getShortDescription() != null) {
+            existingGroup.setShortDescription(gameGroupUpdate.getShortDescription());
+        }
+        if (gameGroupUpdate.getMinPlayers() != null) {
+            existingGroup.setMinPlayers(gameGroupUpdate.getMinPlayers());
+        }
+        if (gameGroupUpdate.getMaxPlayers() != null) {
+            existingGroup.setMaxPlayers(gameGroupUpdate.getMaxPlayers());
+        }
+        if (gameGroupUpdate.getVisibility() != null) {
+            existingGroup.setVisibility(gameGroupUpdate.getVisibility());
+        }
         if (gameGroupUpdate.getAccessRule() != null) {
             existingGroup.setAccessRule(gameGroupUpdate.getAccessRule());
         }
         if (gameGroupUpdate.getModality() != null) {
             existingGroup.setModality(gameGroupUpdate.getModality());
         }
-        if (gameGroupUpdate.getMaxParticipants() != null) {
-            existingGroup.setMaxParticipants(gameGroupUpdate.getMaxParticipants());
+        if (gameGroupUpdate.getCountry() != null) {
+            existingGroup.setCountry(gameGroupUpdate.getCountry());
+        }
+        if (gameGroupUpdate.getState() != null) {
+            existingGroup.setState(gameGroupUpdate.getState());
+        }
+        if (gameGroupUpdate.getCity() != null) {
+            existingGroup.setCity(gameGroupUpdate.getCity());
+        }
+        if (gameGroupUpdate.getThemesContent() != null) {
+            existingGroup.setThemesContent(gameGroupUpdate.getThemesContent());
+        }
+        if (gameGroupUpdate.getPunctualityAttendance() != null) {
+            existingGroup.setPunctualityAttendance(gameGroupUpdate.getPunctualityAttendance());
+        }
+        if (gameGroupUpdate.getHouseRules() != null) {
+            existingGroup.setHouseRules(gameGroupUpdate.getHouseRules());
+        }
+        if (gameGroupUpdate.getBehavioralExpectations() != null) {
+            existingGroup.setBehavioralExpectations(gameGroupUpdate.getBehavioralExpectations());
         }
 
         existingGroup.setUpdatedAt(LocalDateTime.now());

@@ -54,17 +54,25 @@ public class GameGroup {
     @Column(name = "setting_world", length = 100)
     private String settingWorld;
 
+    @NotBlank(message = "{validation.gameGroup.shortDescription.required}")
+    @Size(min = 3, max = 100, message = "{validation.gameGroup.shortDescription.size}")
+    @Column(name = "shortDescription", nullable = false, length = 100)
+    private String shortDescription;
+
+    @NotNull(message = "{validation.gameGroup.visibility.required}")
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "visibility", nullable = false)
+    private Visibility visibility;
+
     @NotNull(message = "{validation.gameGroup.accessRule.required}")
-    @Min(value = 0, message = "{validation.gameGroup.accessRule.min}")
-    @Max(value = 2, message = "{validation.gameGroup.accessRule.max}")
+    @Enumerated(EnumType.ORDINAL)
     @Column(name = "access_rule", nullable = false)
-    private Integer accessRule; // 0 - free, 1 - friends, 2 - approval
+    private AccessRule accessRule;
 
     @NotNull(message = "{validation.gameGroup.modality.required}")
-    @Min(value = 0, message = "{validation.gameGroup.modality.min}")
-    @Max(value = 1, message = "{validation.gameGroup.modality.max}")
+    @Enumerated(EnumType.ORDINAL)
     @Column(name = "modality", nullable = false)
-    private Integer modality; // 0 - online, 1 - presencial
+    private Modality modality;
 
     @Min(value = 1, message = "{validation.gameGroup.minPlayers.min}")
     @Max(value = 20, message = "{validation.gameGroup.minPlayers.max}")
@@ -76,14 +84,41 @@ public class GameGroup {
     @Column(name = "max_players")
     private Integer maxPlayers;
 
-    @Min(value = 1, message = "{validation.gameGroup.maxParticipants.min}")
-    @Max(value = 20, message = "{validation.gameGroup.maxParticipants.max}")
-    @Column(name = "max_participants")
-    private Integer maxParticipants;
+    @Size(max = 100, message = "{validation.gameGroup.country.size}")
+    @Column(name = "country", length = 100)
+    private String country;
+
+    @Size(max = 100, message = "{validation.gameGroup.state.size}")
+    @Column(name = "state", length = 100)
+    private String state;
+
+    @Size(max = 100, message = "{validation.gameGroup.city.size}")
+    @Column(name = "city", length = 100)
+    private String city;
+
+    @Size(max = 500, message = "{validation.gameGroup.themesContent.size}")
+    @Column(name = "themes_content", length = 500)
+    private String themesContent;
+
+    @Size(max = 500, message = "{validation.gameGroup.punctualityAttendance.size}")
+    @Column(name = "punctuality_attendance", length = 500)
+    private String punctualityAttendance;
+
+    @Size(max = 500, message = "{validation.gameGroup.houseRules.size}")
+    @Column(name = "house_rules", length = 500)
+    private String houseRules;
+
+    @Size(max = 500, message = "{validation.gameGroup.behavioralExpectations.size}")
+    @Column(name = "behavioral_expectations", length = 500)
+    private String behavioralExpectations;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @NotNull(message = "{validation.gameGroup.createdBy.required}")
+    @Column(name = "created_by", nullable = false)
+    private UUID createdBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -149,32 +184,32 @@ public class GameGroup {
         this.settingWorld = settingWorld;
     }
 
-    public Integer getAccessRule() {
+    public AccessRule getAccessRule() {
         return accessRule;
     }
 
-    public Integer getModality() {
+    public Modality getModality() {
         return modality;
     }
 
-    public void setAccessRule(Integer accessRule) {
+    public Visibility getVisibility() {
+        return visibility;
+    }
+
+    public void setAccessRule(AccessRule accessRule) {
         this.accessRule = accessRule;
     }
 
-    public void setModality(Integer modality) {
+    public void setModality(Modality modality) {
         this.modality = modality;
     }
 
-    public Integer getMaxParticipants() {
-        return maxParticipants;
+    public void setVisibility(Visibility visibility) {
+        this.visibility = visibility;
     }
 
     public Integer getMaxPlayers() {
         return maxPlayers;
-    }
-
-    public void setMaxParticipants(Integer maxParticipants) {
-        this.maxParticipants = maxParticipants;
     }
 
     public void setDeletedAt(LocalDateTime deletedAt) {
@@ -210,7 +245,7 @@ public class GameGroup {
     }
 
     /**
-     * Enum para modalidade.
+     * Enum para modalidade do grupo.
      */
     public enum Modality {
         ONLINE(0),
@@ -228,11 +263,39 @@ public class GameGroup {
 
         public static Modality fromValue(int value) {
             for (Modality modality : Modality.values()) {
-                if (modality.getValue() == value) {
+                if (modality.value == value) {
                     return modality;
                 }
             }
             throw new IllegalArgumentException("Invalid modality value: " + value);
+        }
+    }
+
+    /**
+     * Enum para visibilidade do grupo.
+     */
+    public enum Visibility {
+        PUBLIC(0),
+        FRIENDS(1),
+        PRIVATE(2);
+
+        private final int value;
+
+        Visibility(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+        public static Visibility fromValue(int value) {
+            for (Visibility visibility : Visibility.values()) {
+                if (visibility.value == value) {
+                    return visibility;
+                }
+            }
+            throw new IllegalArgumentException("Invalid visibility value: " + value);
         }
     }
 }

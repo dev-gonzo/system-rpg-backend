@@ -90,12 +90,12 @@ public class GameGroupParticipantValidationService {
         }
         
         // Valida limite total de participantes (se definido)
-        if (gameGroup.getMaxParticipants() != null) {
-            long totalParticipants = masterCount + playerCount + guestCount;
-            if (totalParticipants >= gameGroup.getMaxParticipants()) {
+        if (gameGroup.getMaxPlayers() != null) {
+            long totalParticipants = participantRepository.countActiveParticipantsByGameGroupId(gameGroupId);
+            if (totalParticipants >= gameGroup.getMaxPlayers()) {
                 throw new IllegalArgumentException(messageSource
                     .getMessage("service.gameGroupParticipant.max.participants.reached", 
-                        new Object[]{gameGroup.getMaxParticipants()}, LocaleContextHolder.getLocale()));
+                        new Object[]{gameGroup.getMaxPlayers()}, LocaleContextHolder.getLocale()));
             }
         }
         

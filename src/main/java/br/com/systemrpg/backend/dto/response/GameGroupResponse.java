@@ -29,19 +29,35 @@ public class GameGroupResponse {
     
     private String settingWorld;
     
+    private String shortDescription;
+    
+    private String visibility; // PUBLIC, FRIENDS, PRIVATE
+    
     private String accessRule; // FREE, FRIENDS, APPROVAL
     
     private String modality; // ONLINE, PRESENCIAL
     
-    private Integer maxParticipants;
+    private Integer minPlayers;
+    
+    private Integer maxPlayers;
     
     private Integer currentParticipants;
     
-    private String location;
+    private String country;
     
-    private String rules;
+    private String state;
     
-    private String notes;
+    private String city;
+    
+    private String themesContent;
+    
+    private String punctualityAttendance;
+    
+    private String houseRules;
+    
+    private String behavioralExpectations;
+    
+    private UUID createdBy;
     
     private Boolean isActive;
     

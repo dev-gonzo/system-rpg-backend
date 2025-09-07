@@ -24,6 +24,10 @@ public interface GameGroupMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "participants", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : null)")
+    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : null)")
+    @Mapping(target = "modality", expression = "java(request.getModality() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : null)")
     GameGroup toEntity(GameGroupCreateRequest request);
     
     /**
@@ -35,16 +39,18 @@ public interface GameGroupMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "participants", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : null)")
+    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : null)")
+    @Mapping(target = "modality", expression = "java(request.getModality() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : null)")
     void updateEntityFromRequest(GameGroupUpdateRequest request, @MappingTarget GameGroup gameGroup);
 
     /**
      * Converte GameGroup para GameGroupResponse.
      */
-    @Mapping(target = "accessRule", expression = "java(gameGroup.getAccessRule() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.fromValue(gameGroup.getAccessRule()).name() : null)")
-    @Mapping(target = "modality", expression = "java(gameGroup.getModality() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.fromValue(gameGroup.getModality()).name() : null)")
+    @Mapping(target = "visibility", expression = "java(gameGroup.getVisibility() != null ? gameGroup.getVisibility().name() : null)")
+    @Mapping(target = "accessRule", expression = "java(gameGroup.getAccessRule() != null ? gameGroup.getAccessRule().name() : null)")
+    @Mapping(target = "modality", expression = "java(gameGroup.getModality() != null ? gameGroup.getModality().name() : null)")
     @Mapping(target = "currentParticipants", expression = "java(gameGroup.getParticipants() != null ? (int) gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).count() : 0)")
-    @Mapping(target = "location", ignore = true)
-    @Mapping(target = "rules", ignore = true)
-    @Mapping(target = "notes", ignore = true)
     GameGroupResponse toResponse(GameGroup gameGroup);
 }

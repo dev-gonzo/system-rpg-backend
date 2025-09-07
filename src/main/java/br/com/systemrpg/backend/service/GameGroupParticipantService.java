@@ -147,12 +147,12 @@ public class GameGroupParticipantService {
         }
 
         // Verifica limite de participantes
-        if (gameGroup.getMaxParticipants() != null) {
+        if (gameGroup.getMaxPlayers() != null) {
             long currentParticipants = participantRepository.countActiveParticipantsByGameGroupId(gameGroupId);
-            if (currentParticipants >= gameGroup.getMaxParticipants()) {
+            if (currentParticipants >= gameGroup.getMaxPlayers()) {
                 throw new IllegalArgumentException(messageSource
                     .getMessage("service.gameGroupParticipant.max.participants.reached", 
-                        new Object[]{gameGroup.getMaxParticipants()}, LocaleContextHolder.getLocale()));
+                        new Object[]{gameGroup.getMaxPlayers()}, LocaleContextHolder.getLocale()));
             }
         }
 

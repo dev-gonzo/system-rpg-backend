@@ -38,7 +38,7 @@ public class GameGroupHateoasResponse extends HateoasResponse {
     
     private String modality; // ONLINE, PRESENCIAL
     
-    private Integer maxParticipants;
+    private Integer maxPlayers;
     
     private Integer currentParticipants;
     
