@@ -28,6 +28,7 @@ import br.com.systemrpg.backend.hateoas.PageInfo;
 import br.com.systemrpg.backend.mapper.GameGroupParticipantMapper;
 import br.com.systemrpg.backend.service.GameGroupParticipantService;
 import br.com.systemrpg.backend.util.ResponseUtil;
+import br.com.systemrpg.backend.util.MessageUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -49,6 +50,7 @@ public class GameGroupParticipantController {
     private final GameGroupParticipantService gameGroupParticipantService;
     private final GameGroupParticipantMapper gameGroupParticipantMapper;
     private final HateoasLinkBuilder hateoasLinkBuilder;
+    private final MessageUtil messageUtil;
 
     /**
      * Lista todos os participantes de grupos de jogo com paginação.
@@ -101,7 +103,7 @@ public class GameGroupParticipantController {
         
         GameGroupParticipantResponse participant = gameGroupParticipantService.findByIdAsResponse(id);
         
-        return ResponseUtil.okWithSuccess(participant, "Participante encontrado com sucesso");
+        return ResponseUtil.okWithSuccess(participant, messageUtil.getMessage("controller.gamegroupparticipant.found.success"));
     }
 
     /**
@@ -115,7 +117,7 @@ public class GameGroupParticipantController {
         
         GameGroupParticipantResponse participant = gameGroupParticipantService.create(request);
         
-        return ResponseUtil.createdWithSuccess(participant, "Participante adicionado com sucesso");
+        return ResponseUtil.createdWithSuccess(participant, messageUtil.getMessage("controller.gamegroupparticipant.created.success"));
     }
 
     /**
@@ -131,7 +133,8 @@ public class GameGroupParticipantController {
         GameGroupParticipantResponse participantResponse = gameGroupParticipantMapper.toResponse(participant);
         
         String message = participantResponse.getIsActive() ? 
-                "Participante ativado com sucesso" : "Participante desativado com sucesso";
+                messageUtil.getMessage("controller.gamegroupparticipant.activated.success") : 
+                messageUtil.getMessage("controller.gamegroupparticipant.deactivated.success");
         
         return ResponseUtil.okWithSuccess(participantResponse, message);
     }
@@ -149,7 +152,7 @@ public class GameGroupParticipantController {
         
         return ResponseUtil.okWithSuccess(
                 null,
-                "Participante removido com sucesso"
+                messageUtil.getMessage("controller.gamegroupparticipant.deleted.success")
         );
     }
 

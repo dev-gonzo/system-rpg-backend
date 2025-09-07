@@ -15,6 +15,7 @@ import br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse;
 import br.com.systemrpg.backend.dto.response.SuccessResponse;
 import br.com.systemrpg.backend.mapper.GameGroupParticipantMapper;
 import br.com.systemrpg.backend.service.GameGroupInviteService;
+import br.com.systemrpg.backend.util.MessageUtil;
 import br.com.systemrpg.backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class GameGroupInviteController {
 
     private final GameGroupInviteService gameGroupInviteService;
+    private final MessageUtil messageUtil;
     private final GameGroupParticipantMapper gameGroupParticipantMapper;
 
     /**
@@ -48,7 +50,7 @@ public class GameGroupInviteController {
     @ApiResponse(responseCode = "403", description = "Acesso negado")
     @ApiResponse(responseCode = "404", description = "Convite não encontrado")
     @ApiResponse(responseCode = "409", description = "Usuário já participa do grupo")
-    public ResponseEntity<?> useInvite(
+    public ResponseEntity<SuccessResponse<GameGroupParticipantResponse>> useInvite(
             @Parameter(description = "Código do convite") @PathVariable String inviteCode,
             HttpServletRequest httpRequest) {
         
@@ -58,7 +60,7 @@ public class GameGroupInviteController {
             GameGroupParticipant participant = gameGroupInviteService.useInvite(inviteCode, username);
             GameGroupParticipantResponse response = gameGroupParticipantMapper.toResponse(participant);
             
-            return ResponseUtil.okWithSuccess(response, "Convite usado com sucesso! Você foi adicionado ao grupo.");
+            return ResponseUtil.okWithSuccess(response, messageUtil.getMessage("controller.gamegroupinvite.used.success"));
                 
         } catch (IllegalArgumentException e) {
             return ResponseUtil.badRequest(e.getMessage());

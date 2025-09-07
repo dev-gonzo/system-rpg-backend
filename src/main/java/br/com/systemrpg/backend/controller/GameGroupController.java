@@ -17,6 +17,7 @@ import br.com.systemrpg.backend.mapper.GameGroupMapper;
 import br.com.systemrpg.backend.service.GameGroupInviteService;
 import br.com.systemrpg.backend.service.GameGroupService;
 import br.com.systemrpg.backend.util.ResponseUtil;
+import br.com.systemrpg.backend.util.MessageUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,6 +55,7 @@ public class GameGroupController {
     private final GameGroupHateoasMapper gameGroupHateoasMapper;
     private final GameGroupInviteMapper gameGroupInviteMapper;
     private final HateoasLinkBuilder hateoasLinkBuilder;
+    private final MessageUtil messageUtil;
 
     /**
      * Lista todos os grupos de jogo com paginação e filtros.
@@ -133,7 +135,7 @@ public class GameGroupController {
         // Adicionar links HATEOAS
         hateoasLinkBuilder.addGameGroupLinks(hateoasResponse, id);
         
-        String message = "Grupo de jogo encontrado com sucesso";
+        String message = messageUtil.getMessage("controller.gamegroup.found.success");
         
         return ResponseUtil.okWithSuccess(hateoasResponse, message);
     }
@@ -166,7 +168,7 @@ public class GameGroupController {
         // Adicionar links HATEOAS
         hateoasLinkBuilder.addGameGroupLinks(hateoasResponse, createdGroup.getId());
         
-        String message = "Grupo de jogo criado com sucesso";
+        String message = messageUtil.getMessage("controller.gamegroup.created.success");
         
         return ResponseUtil.createdWithSuccess(hateoasResponse, message);
     }
@@ -190,7 +192,7 @@ public class GameGroupController {
         // Adicionar links HATEOAS
         hateoasLinkBuilder.addGameGroupLinks(hateoasResponse, id);
         
-        String message = "Grupo de jogo atualizado com sucesso";
+        String message = messageUtil.getMessage("controller.gamegroup.updated.success");
         
         return ResponseUtil.okWithSuccess(hateoasResponse, message);
     }
@@ -212,7 +214,8 @@ public class GameGroupController {
         hateoasLinkBuilder.addGameGroupLinks(hateoasResponse, id);
         
         String message = gameGroupResponse.getIsActive() ? 
-                "Grupo de jogo ativado com sucesso" : "Grupo de jogo desativado com sucesso";
+                messageUtil.getMessage("controller.gamegroup.activated.success") : 
+                messageUtil.getMessage("controller.gamegroup.deactivated.success");
         
         return ResponseUtil.okWithSuccess(hateoasResponse, message);
     }
@@ -228,7 +231,7 @@ public class GameGroupController {
         
         gameGroupService.deleteGameGroup(id);
         
-        return ResponseUtil.okWithSuccess(null, "Grupo de jogo excluído com sucesso");
+        return ResponseUtil.okWithSuccess(null, messageUtil.getMessage("controller.gamegroup.deleted.success"));
     }
 
     /**
@@ -259,7 +262,7 @@ public class GameGroupController {
             GameGroupInviteResponse response = gameGroupInviteMapper.toResponse(invite);
             
             return ResponseEntity.status(201)
-                .body(new SuccessResponse<>("Convite criado com sucesso", response));
+                .body(new SuccessResponse<>(messageUtil.getMessage("controller.gamegroup.invite.created.success"), response));
                 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
@@ -284,7 +287,7 @@ public class GameGroupController {
             .map(gameGroupInviteMapper::toResponse)
             .collect(Collectors.toList());
         
-        return ResponseUtil.okWithSuccess(responses, "Lista de convites retornada com sucesso");
+        return ResponseUtil.okWithSuccess(responses, messageUtil.getMessage("controller.gamegroup.invites.list.success"));
     }
 
     /**
@@ -303,7 +306,7 @@ public class GameGroupController {
         String username = httpRequest.getUserPrincipal().getName();
         gameGroupInviteService.deleteInvite(inviteId, username);
         
-        return ResponseUtil.okWithSuccess(null, "Convite removido com sucesso");
+        return ResponseUtil.okWithSuccess(null, messageUtil.getMessage("controller.gamegroup.invite.deleted.success"));
     }
 
     /**
