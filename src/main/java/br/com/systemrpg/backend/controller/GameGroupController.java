@@ -244,7 +244,7 @@ public class GameGroupController {
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode criar convites")
     @ApiResponse(responseCode = "404", description = "Grupo não encontrado")
-    public ResponseEntity<SuccessResponse<GameGroupInviteResponse>> createInvite(
+    public ResponseEntity<?> createInvite(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id,
             @Parameter(description = "Dados do convite")
             @Valid @RequestBody GameGroupInviteCreateRequest request,
@@ -265,8 +265,7 @@ public class GameGroupController {
                 .body(new SuccessResponse<>(messageUtil.getMessage("controller.gamegroup.invite.created.success"), response));
                 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(new SuccessResponse<GameGroupInviteResponse>(e.getMessage()));
+            return ResponseUtil.badRequest("Erro ao criar convite", e.getMessage());
         }
     }
 

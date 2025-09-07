@@ -50,7 +50,7 @@ public class GameGroupInviteController {
     @ApiResponse(responseCode = "403", description = "Acesso negado")
     @ApiResponse(responseCode = "404", description = "Convite não encontrado")
     @ApiResponse(responseCode = "409", description = "Usuário já participa do grupo")
-    public ResponseEntity<SuccessResponse<GameGroupParticipantResponse>> useInvite(
+    public ResponseEntity<?> useInvite(
             @Parameter(description = "Código do convite") @PathVariable String inviteCode,
             HttpServletRequest httpRequest) {
         
@@ -61,8 +61,8 @@ public class GameGroupInviteController {
             
             return ResponseUtil.okWithSuccess(response, messageUtil.getMessage("controller.gamegroupinvite.used.success"));
                 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new SuccessResponse<>(e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseUtil.badRequest("Erro ao usar convite", e.getMessage());
         }
     }
 }
