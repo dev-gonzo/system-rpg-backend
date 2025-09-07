@@ -21,7 +21,7 @@ public interface GameGroupHateoasMapper {
      * Converte GameGroupResponse para GameGroupHateoasResponse.
      */
     @Mapping(target = "links", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdBy", expression = "java(null)")
     GameGroupHateoasResponse toHateoasResponse(GameGroupResponse gameGroupResponse);
     
     /**

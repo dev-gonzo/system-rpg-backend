@@ -38,7 +38,6 @@ public class AuthHateoasResponse extends HateoasResponse {
     private UserInfo user;
     
     @Data
-    @SuperBuilder
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)

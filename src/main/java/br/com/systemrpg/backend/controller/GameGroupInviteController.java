@@ -55,15 +55,14 @@ public class GameGroupInviteController {
             HttpServletRequest httpRequest) {
         
         try {
-            String username = httpRequest.getUserPrincipal().getName();
-            
+            String username = httpRequest.getRemoteUser();
             GameGroupParticipant participant = gameGroupInviteService.useInvite(inviteCode, username);
             GameGroupParticipantResponse response = gameGroupParticipantMapper.toResponse(participant);
             
             return ResponseUtil.okWithSuccess(response, messageUtil.getMessage("controller.gamegroupinvite.used.success"));
                 
         } catch (IllegalArgumentException e) {
-            return ResponseUtil.badRequest(e.getMessage());
+            return ResponseEntity.badRequest().body(new SuccessResponse<>(e.getMessage(), null));
         }
     }
 }
