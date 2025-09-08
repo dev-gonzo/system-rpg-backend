@@ -90,13 +90,6 @@ public class GameGroupService {
     public GameGroup createGameGroup(GameGroup gameGroup, UUID creatorUserId) {
         log.info("Criando novo grupo de jogo: {} por usuário: {}", gameGroup.getCampaignName(), creatorUserId);
 
-        // Valida se o nome da campanha já existe
-        if (gameGroupRepository.existsByCampaignNameIgnoreCaseAndDeletedAtIsNull(gameGroup.getCampaignName())) {
-            throw new IllegalArgumentException(messageSource
-                .getMessage("service.gameGroup.campaignName.exists", 
-                    new Object[]{gameGroup.getCampaignName()}, LocaleContextHolder.getLocale()));
-        }
-
         // Busca o usuário criador
         User creator = userRepository.findById(creatorUserId)
             .orElseThrow(() -> new RecordNotFoundException(messageSource
@@ -134,16 +127,6 @@ public class GameGroupService {
         log.info("Atualizando grupo de jogo: {}", id);
 
         GameGroup existingGroup = findById(id);
-
-        // Valida se o nome da campanha já existe (excluindo o próprio grupo)
-        if (StringUtils.hasText(gameGroupUpdate.getCampaignName()) && 
-            !existingGroup.getCampaignName().equalsIgnoreCase(gameGroupUpdate.getCampaignName()) &&
-            gameGroupRepository.existsByCampaignNameIgnoreCaseAndIdNotAndDeletedAtIsNull(
-                gameGroupUpdate.getCampaignName(), id)) {
-            throw new IllegalArgumentException(messageSource
-                .getMessage("service.gameGroup.campaignName.exists", 
-                    new Object[]{gameGroupUpdate.getCampaignName()}, LocaleContextHolder.getLocale()));
-        }
 
         // Atualiza os campos
         if (StringUtils.hasText(gameGroupUpdate.getCampaignName())) {
