@@ -1,6 +1,7 @@
 package br.com.systemrpg.backend.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -42,6 +43,8 @@ public class GameGroupResponse {
     private Integer maxPlayers;
     
     private Integer currentParticipants;
+    
+    private List<GameGroupMemberResponse> participants;
     
     private String country;
     

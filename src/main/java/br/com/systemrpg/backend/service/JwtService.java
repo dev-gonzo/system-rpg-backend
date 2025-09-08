@@ -2,10 +2,15 @@ package br.com.systemrpg.backend.service;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
@@ -62,6 +67,12 @@ public class JwtService {
     @Value("${jwt.rsa.key-id:systemrpg-backend-key-2025}")
     private String keyId;
     
+    @Value("${jwt.rsa.private-key:}")
+    private String rsaPrivateKeyBase64;
+    
+    @Value("${jwt.rsa.public-key:}")
+    private String rsaPublicKeyBase64;
+    
     // Constantes para claims do JWT
     private static final String CLAIM_USER_ID = "userId";
     private static final String CLAIM_EMAIL = "email";
@@ -72,7 +83,7 @@ public class JwtService {
     private static final String TOKEN_TYPE_REFRESH = "REFRESH";
     private static final String RSA_ALGORITHM = "RS256";
     
-    // Cache para o par de chaves RSA (gerado uma vez)
+    // Cache para o par de chaves RSA (carregado das configurações)
     private KeyPair rsaKeyPair;
 
     /**
@@ -276,21 +287,60 @@ public class JwtService {
     }
     
     /**
-     * Gera ou obtém o par de chaves RSA.
+     * Carrega ou gera o par de chaves RSA.
      */
     private synchronized KeyPair getRsaKeyPair() {
         if (rsaKeyPair == null) {
             try {
-                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-                keyPairGenerator.initialize(ValidationConstants.RSA_KEY_SIZE);
-                rsaKeyPair = keyPairGenerator.generateKeyPair();
-                log.info("Par de chaves RSA gerado com sucesso para JWKS");
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Erro ao gerar par de chaves RSA: {}", e.getMessage());
-                throw new KeyGenerationException("Falha ao gerar chaves RSA", e);
+                // Se as chaves estão configuradas e não são vazias, carrega elas
+                if (rsaPrivateKeyBase64 != null && !rsaPrivateKeyBase64.trim().isEmpty() && 
+                    rsaPublicKeyBase64 != null && !rsaPublicKeyBase64.trim().isEmpty()) {
+                    rsaKeyPair = loadRsaKeyPairFromConfig();
+                    log.info("Par de chaves RSA carregado das configurações para JWKS");
+                } else {
+                    // Fallback: gera novas chaves (não recomendado para produção)
+                    rsaKeyPair = generateNewRsaKeyPair();
+                    log.warn("Par de chaves RSA gerado dinamicamente - configure chaves fixas para produção");
+                }
+            } catch (Exception e) {
+                log.error("Erro ao carregar/gerar par de chaves RSA: {}", e.getMessage());
+                // Em caso de erro, tenta gerar novas chaves como fallback
+                try {
+                    rsaKeyPair = generateNewRsaKeyPair();
+                    log.warn("Usando chaves RSA geradas dinamicamente devido ao erro anterior");
+                } catch (NoSuchAlgorithmException fallbackException) {
+                    throw new KeyGenerationException("Falha ao obter chaves RSA", fallbackException);
+                }
             }
         }
         return rsaKeyPair;
+    }
+    
+    /**
+     * Carrega o par de chaves RSA das configurações.
+     */
+    private KeyPair loadRsaKeyPairFromConfig() throws Exception {
+        // Decodifica a chave privada
+        byte[] privateKeyBytes = Base64.getDecoder().decode(rsaPrivateKeyBase64);
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+        
+        // Decodifica a chave pública
+        byte[] publicKeyBytes = Base64.getDecoder().decode(rsaPublicKeyBase64);
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+        
+        return new KeyPair(publicKey, privateKey);
+    }
+    
+    /**
+     * Gera um novo par de chaves RSA (fallback).
+     */
+    private KeyPair generateNewRsaKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(ValidationConstants.RSA_KEY_SIZE);
+        return keyPairGenerator.generateKeyPair();
     }
     
     /**

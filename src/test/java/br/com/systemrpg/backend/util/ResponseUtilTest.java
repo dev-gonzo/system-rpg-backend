@@ -1,8 +1,7 @@
 package br.com.systemrpg.backend.util;
 
 import br.com.systemrpg.backend.dto.response.ApiResponse;
-import br.com.systemrpg.backend.dto.response.ErrorResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,11 +81,11 @@ class ResponseUtilTest {
     void badRequest_WithMessageAndDetails_ShouldReturnBadRequestErrorResponse() {
         String message = "Bad request";
         String details = "Invalid input";
-        ResponseEntity<ErrorResponse> response = ResponseUtil.badRequest(message, details);
+        ResponseEntity<ResponseApi<String>> response = ResponseUtil.badRequest(message, details);
         
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(details, response.getBody().getMessage());
+        assertEquals(details, response.getBody().getData());
         assertEquals(message, response.getBody().getError());
     }
 
@@ -105,11 +104,11 @@ class ResponseUtilTest {
     void unauthorized_WithMessageAndDetails_ShouldReturnUnauthorizedErrorResponse() {
         String message = "Unauthorized";
         String details = "Invalid token";
-        ResponseEntity<ErrorResponse> response = ResponseUtil.unauthorized(message, details);
+        ResponseEntity<ResponseApi<String>> response = ResponseUtil.unauthorized(message, details);
         
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(details, response.getBody().getMessage());
+        assertEquals(details, response.getBody().getData());
         assertEquals(message, response.getBody().getError());
     }
 
@@ -161,11 +160,11 @@ class ResponseUtilTest {
     void internalServerError_WithMessageAndDetails_ShouldReturnInternalServerErrorErrorResponse() {
         String message = "Server error";
         String details = "Database connection failed";
-        ResponseEntity<ErrorResponse> response = ResponseUtil.internalServerError(message, details);
+        ResponseEntity<ResponseApi<String>> response = ResponseUtil.internalServerError(message, details);
         
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(details, response.getBody().getMessage());
+        assertEquals(details, response.getBody().getData());
         assertEquals(message, response.getBody().getError());
     }
 
@@ -227,7 +226,7 @@ class ResponseUtilTest {
     void successResponse_WithDataAndMessage_ShouldReturnSuccessResponse() {
         String data = "test data";
         String message = "Success";
-        SuccessResponse<String> response = ResponseUtil.successResponse(data, message);
+        ResponseApi<String> response = ResponseUtil.successResponse(data, message);
         
         assertNotNull(response);
         assertEquals(message, response.getMessage());
@@ -237,7 +236,7 @@ class ResponseUtilTest {
     @Test
     void successResponse_WithMessageOnly_ShouldReturnSuccessResponse() {
         String message = "Success";
-        SuccessResponse<?> response = ResponseUtil.successResponse(message);
+        ResponseApi<Void> response = ResponseUtil.successResponse(message);
         
         assertNotNull(response);
         assertEquals(message, response.getMessage());
@@ -248,7 +247,7 @@ class ResponseUtilTest {
     void okWithSuccess_WithDataAndMessage_ShouldReturnOkSuccessResponse() {
         String data = "test data";
         String message = "Success";
-        ResponseEntity<SuccessResponse<String>> response = ResponseUtil.okWithSuccess(data, message);
+        ResponseEntity<ResponseApi<String>> response = ResponseUtil.okWithSuccess(data, message);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -260,7 +259,7 @@ class ResponseUtilTest {
     void createdWithSuccess_WithDataAndMessage_ShouldReturnCreatedSuccessResponse() {
         String data = "created data";
         String message = "Created successfully";
-        ResponseEntity<SuccessResponse<String>> response = ResponseUtil.createdWithSuccess(data, message);
+        ResponseEntity<ResponseApi<String>> response = ResponseUtil.createdWithSuccess(data, message);
         
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());

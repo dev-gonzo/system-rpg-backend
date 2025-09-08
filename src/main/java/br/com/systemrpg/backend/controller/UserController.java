@@ -26,7 +26,7 @@ import br.com.systemrpg.backend.dto.UserCreateRequest;
 import br.com.systemrpg.backend.dto.UserUpdateRequest;
 import br.com.systemrpg.backend.dto.hateoas.UserHateoasResponse;
 import br.com.systemrpg.backend.dto.response.AvailabilityResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import br.com.systemrpg.backend.dto.response.UserResponse;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
@@ -70,7 +70,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<PagedHateoasResponse<UserHateoasResponse>>> getAllUsers(
+    public ResponseEntity<ResponseApi<PagedHateoasResponse<UserHateoasResponse>>> getAllUsers(
             @PageableDefault(size = 20) Pageable pageable,
             @Parameter(description = "Filtrar apenas usuários ativos")
             @RequestParam(required = false) Boolean active) {
@@ -78,11 +78,10 @@ public class UserController {
         Page<User> users = getUsersPage(pageable, active);
         PagedHateoasResponse<UserHateoasResponse> hateoasResponse = buildUserListResponse(users, pageable, active);
 
-        SuccessResponse<PagedHateoasResponse<UserHateoasResponse>> response = new SuccessResponse<>(
-                messageSource.getMessage("controller.user.list.success", null, LocaleContextHolder.getLocale()),
-                hateoasResponse
+        return ResponseUtil.okWithSuccess(
+                hateoasResponse,
+                messageSource.getMessage("controller.user.list.success", null, LocaleContextHolder.getLocale())
         );
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -139,7 +138,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<UserHateoasResponse>> getUserById(
+    public ResponseEntity<ResponseApi<UserHateoasResponse>> getUserById(
             @Parameter(description = "ID do usuário") @PathVariable UUID id) {
 
         User user = userService.findById(id);
@@ -169,7 +168,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "Username ou email já existem"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<UserHateoasResponse>> createUser(
+    public ResponseEntity<ResponseApi<UserHateoasResponse>> createUser(
             @Parameter(description = "Dados do usuário a ser criado")
             @Valid @RequestBody UserCreateRequest request) {
 
@@ -200,7 +199,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "Username ou email já existem"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<UserHateoasResponse>> updateUser(
+    public ResponseEntity<ResponseApi<UserHateoasResponse>> updateUser(
             @Parameter(description = "ID do usuário") @PathVariable UUID id,
             @Parameter(description = "Dados atualizados do usuário")
             @Valid @RequestBody UserUpdateRequest request) {
@@ -230,7 +229,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<UserResponse>> toggleUserStatus(
+    public ResponseEntity<ResponseApi<UserResponse>> toggleUserStatus(
             @Parameter(description = "ID do usuário") @PathVariable UUID id,
             @Parameter(description = "Novo status (true = ativo, false = inativo)")
             @RequestParam Boolean active) {
@@ -238,11 +237,10 @@ public class UserController {
         User user = userService.toggleUserStatus(id, active);
         UserResponse userResponse = userMapper.toResponse(user);
 
-        SuccessResponse<UserResponse> response = new SuccessResponse<>(
-                messageSource.getMessage("controller.user.status.changed.success", null, LocaleContextHolder.getLocale()),
-                userResponse
+        return ResponseUtil.okWithSuccess(
+                userResponse,
+                messageSource.getMessage("controller.user.status.changed.success", null, LocaleContextHolder.getLocale())
         );
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -256,16 +254,15 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<String>> deactivateUser(
+    public ResponseEntity<ResponseApi<String>> deactivateUser(
             @Parameter(description = "ID do usuário") @PathVariable UUID id) {
 
         userService.deactivateUser(id);
 
-        SuccessResponse<String> response = new SuccessResponse<>(
+        return ResponseUtil.okWithSuccess(
+                "Usuário desativado",
                 messageSource.getMessage("controller.user.deactivated.success", null, LocaleContextHolder.getLocale())
         );
-
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -279,60 +276,57 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<String>> deleteUserPermanently(
+    public ResponseEntity<ResponseApi<String>> deleteUserPermanently(
             @Parameter(description = "ID do usuário") @PathVariable UUID id) {
 
         userService.deleteUser(id);
 
-        SuccessResponse<String> response = new SuccessResponse<>(
+        return ResponseUtil.okWithSuccess(
+                "Usuário excluído",
                 messageSource.getMessage("controller.user.deleted.success", null, LocaleContextHolder.getLocale())
         );
-
-        return ResponseEntity.ok(response);
     }
 
     /**
      * Verifica disponibilidade de username.
      */
-    @GetMapping("/check-username")
+    @GetMapping("/check-username/{username}")
     @Operation(summary = "Verificar disponibilidade de username", description = "Verifica se um username está disponível")
     @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso")
-    public ResponseEntity<SuccessResponse<AvailabilityResponse>> checkUsernameAvailability(
-            @Parameter(description = "Username a ser verificado") @RequestParam String username) {
+    public ResponseEntity<ResponseApi<AvailabilityResponse>> checkUsernameAvailability(
+            @Parameter(description = "Username a ser verificado") @PathVariable String username) {
 
         boolean available = userService.isUsernameAvailable(username);
         String messageKey = available ? "controller.user.username.available" : "controller.user.username.unavailable";
         String message = messageSource.getMessage(messageKey, null, LocaleContextHolder.getLocale());
 
         AvailabilityResponse availabilityResponse = new AvailabilityResponse(available);
-        SuccessResponse<AvailabilityResponse> response = new SuccessResponse<>(
-                message,
-                availabilityResponse
-        );
 
-        return ResponseEntity.ok(response);
+        return ResponseUtil.okWithSuccess(
+                availabilityResponse,
+                message
+        );
     }
 
     /**
      * Verifica disponibilidade de email.
      */
-    @GetMapping("/check-email")
+    @GetMapping("/check-email/{email}")
     @Operation(summary = "Verificar disponibilidade de email", description = "Verifica se um email está disponível")
     @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso")
-    public ResponseEntity<SuccessResponse<AvailabilityResponse>> checkEmailAvailability(
-            @Parameter(description = "Email a ser verificado") @RequestParam String email) {
+    public ResponseEntity<ResponseApi<AvailabilityResponse>> checkEmailAvailability(
+            @Parameter(description = "Email a ser verificado") @PathVariable String email) {
 
         boolean available = userService.isEmailAvailable(email);
         String messageKey = available ? "controller.user.email.available" : "controller.user.email.unavailable";
         String message = messageSource.getMessage(messageKey, null, LocaleContextHolder.getLocale());
 
         AvailabilityResponse availabilityResponse = new AvailabilityResponse(available);
-        SuccessResponse<AvailabilityResponse> response = new SuccessResponse<>(
-                message,
-                availabilityResponse
-        );
 
-        return ResponseEntity.ok(response);
+        return ResponseUtil.okWithSuccess(
+                availabilityResponse,
+                message
+        );
     }
 
     /**
@@ -346,17 +340,15 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<SuccessResponse<UserResponse>> verifyEmail(
+    public ResponseEntity<ResponseApi<UserResponse>> verifyEmail(
             @Parameter(description = "ID do usuário") @PathVariable UUID id) {
 
         User user = userService.verifyEmail(id);
         UserResponse userResponse = userMapper.toResponse(user);
 
-        SuccessResponse<UserResponse> response = new SuccessResponse<>(
-                messageSource.getMessage("controller.user.email.verified.success", null, LocaleContextHolder.getLocale()),
-                userResponse
+        return ResponseUtil.okWithSuccess(
+                userResponse,
+                messageSource.getMessage("controller.user.email.verified.success", null, LocaleContextHolder.getLocale())
         );
-
-        return ResponseEntity.ok(response);
     }
 }

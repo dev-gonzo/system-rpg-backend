@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.systemrpg.backend.domain.entity.GameGroupParticipant;
 import br.com.systemrpg.backend.dto.request.GameGroupParticipantCreateRequest;
 import br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
 import br.com.systemrpg.backend.hateoas.PageInfo;
@@ -98,7 +98,7 @@ public class GameGroupParticipantController {
     @GetMapping("/{id}")
     @PreAuthorize("@gameGroupParticipantService.isParticipantOwner(#id, authentication.name)")
     @Operation(summary = "Buscar participante por ID", description = "Busca um participante de grupo de jogo pelo seu ID")
-    public ResponseEntity<SuccessResponse<GameGroupParticipantResponse>> findById(
+    public ResponseEntity<ResponseApi<GameGroupParticipantResponse>> findById(
             @Parameter(description = "ID do participante") @PathVariable UUID id) {
         
         GameGroupParticipantResponse participant = gameGroupParticipantService.findByIdAsResponse(id);
@@ -112,7 +112,7 @@ public class GameGroupParticipantController {
     @PostMapping
     @PreAuthorize("@gameGroupService.isGroupOwner(#request.gameGroupId, authentication.name)")
     @Operation(summary = "Adicionar participante", description = "Adiciona um novo participante a um grupo de jogo")
-    public ResponseEntity<SuccessResponse<GameGroupParticipantResponse>> create(
+    public ResponseEntity<ResponseApi<GameGroupParticipantResponse>> create(
             @Valid @RequestBody GameGroupParticipantCreateRequest request) {
         
         GameGroupParticipantResponse participant = gameGroupParticipantService.create(request);
@@ -126,7 +126,7 @@ public class GameGroupParticipantController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("@gameGroupParticipantService.canManageParticipant(#id, authentication.name)")
     @Operation(summary = "Ativar/Desativar participante", description = "Ativa ou desativa um participante de grupo de jogo")
-    public ResponseEntity<SuccessResponse<GameGroupParticipantResponse>> toggleStatus(
+    public ResponseEntity<ResponseApi<GameGroupParticipantResponse>> toggleStatus(
             @Parameter(description = "ID do participante") @PathVariable UUID id) {
         
         GameGroupParticipant participant = gameGroupParticipantService.toggleActiveStatus(id);
@@ -145,7 +145,7 @@ public class GameGroupParticipantController {
     @DeleteMapping("/{id}")
     @PreAuthorize("@gameGroupParticipantService.canManageParticipant(#id, authentication.name)")
     @Operation(summary = "Remover participante", description = "Remove um participante de um grupo de jogo")
-    public ResponseEntity<SuccessResponse<Void>> delete(
+    public ResponseEntity<ResponseApi<Void>> delete(
             @Parameter(description = "ID do participante") @PathVariable UUID id) {
         
         gameGroupParticipantService.removeParticipant(id);

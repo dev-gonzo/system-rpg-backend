@@ -1,8 +1,8 @@
 package br.com.systemrpg.backend.util;
 
 import br.com.systemrpg.backend.dto.response.ApiResponse;
-import br.com.systemrpg.backend.dto.response.ErrorResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -86,14 +86,14 @@ public class ResponseUtil {
     }
 
     /**
-     * Cria uma resposta de requisição inválida com ErrorResponse.
+     * Cria uma resposta de requisição inválida com ResponseApi.
      *
      * @param message mensagem de erro
      * @param details detalhes do erro
      * @return ResponseEntity com status 400
      */
-    public static ResponseEntity<ErrorResponse> badRequest(String message, String details) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(message, details));
+    public static ResponseEntity<ResponseApi<String>> badRequest(String message, String details) {
+        return ResponseEntity.badRequest().body(ResponseApi.error(message, details));
     }
 
     /**
@@ -107,14 +107,14 @@ public class ResponseUtil {
     }
 
     /**
-     * Cria uma resposta de não autorizado com ErrorResponse.
+     * Cria uma resposta de não autorizado com ResponseApi.
      *
      * @param message mensagem de erro
      * @param details detalhes do erro
      * @return ResponseEntity com status 401
      */
-    public static ResponseEntity<ErrorResponse> unauthorized(String message, String details) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(message, details));
+    public static ResponseEntity<ResponseApi<String>> unauthorized(String message, String details) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseApi.error(message, details));
     }
 
     /**
@@ -158,14 +158,14 @@ public class ResponseUtil {
     }
 
     /**
-     * Cria uma resposta de erro interno do servidor com ErrorResponse.
+     * Cria uma resposta de erro interno do servidor com ResponseApi.
      *
      * @param message mensagem de erro
      * @param details detalhes do erro
      * @return ResponseEntity com status 500
      */
-    public static ResponseEntity<ErrorResponse> internalServerError(String message, String details) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(message, details));
+    public static ResponseEntity<ResponseApi<String>> internalServerError(String message, String details) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseApi.error(message, details));
     }
 
     /**
@@ -216,48 +216,48 @@ public class ResponseUtil {
     }
 
     /**
-     * Cria uma SuccessResponse com dados e mensagem.
+     * Cria uma ResponseApi com dados e mensagem.
      *
      * @param data os dados da resposta
      * @param message mensagem de sucesso
      * @param <T> tipo dos dados
-     * @return SuccessResponse
+     * @return ResponseApi
      */
-    public static <T> SuccessResponse<T> successResponse(T data, String message) {
-        return new SuccessResponse<>(message, data);
+    public static <T> ResponseApi<T> successResponse(T data, String message) {
+        return ResponseApi.success(message, data);
     }
 
     /**
-     * Cria uma SuccessResponse apenas com mensagem.
+     * Cria uma ResponseApi apenas com mensagem.
      *
      * @param message mensagem de sucesso
-     * @return SuccessResponse
+     * @return ResponseApi
      */
-    public static SuccessResponse<Object> successResponse(String message) {
-        return new SuccessResponse<>(message, null);
+    public static ResponseApi<Void> successResponse(String message) {
+        return ResponseApi.success(message);
     }
 
     /**
-     * Cria uma resposta de sucesso (200 OK) com SuccessResponse.
+     * Cria uma resposta de sucesso (200 OK) com ResponseApi.
      *
      * @param data os dados da resposta
      * @param message mensagem de sucesso
      * @param <T> tipo dos dados
      * @return ResponseEntity com status 200
      */
-    public static <T> ResponseEntity<SuccessResponse<T>> okWithSuccess(T data, String message) {
+    public static <T> ResponseEntity<ResponseApi<T>> okWithSuccess(T data, String message) {
         return ResponseEntity.ok(successResponse(data, message));
     }
 
     /**
-     * Cria uma resposta de criação (201 Created) com SuccessResponse.
+     * Cria uma resposta de criação (201 Created) com ResponseApi.
      *
      * @param data os dados criados
      * @param message mensagem de sucesso
      * @param <T> tipo dos dados
      * @return ResponseEntity com status 201
      */
-    public static <T> ResponseEntity<SuccessResponse<T>> createdWithSuccess(T data, String message) {
+    public static <T> ResponseEntity<ResponseApi<T>> createdWithSuccess(T data, String message) {
         return ResponseEntity.status(HttpStatus.CREATED).body(successResponse(data, message));
     }
 }

@@ -134,19 +134,18 @@ class UserControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        userHateoasResponse = UserHateoasResponse.builder()
-                .id(testUserId)
-                .username("testuser")
-                .email("test@example.com")
-                .firstName("Test")
-                .lastName("User")
-                .fullName("Test User")
-                .isActive(true)
-                .isEmailVerified(false)
-                .roles(List.of(roleResponse))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        userHateoasResponse = new UserHateoasResponse();
+        userHateoasResponse.setId(testUserId);
+        userHateoasResponse.setUsername("testuser");
+        userHateoasResponse.setEmail("test@example.com");
+        userHateoasResponse.setFirstName("Test");
+        userHateoasResponse.setLastName("User");
+        userHateoasResponse.setFullName("Test User");
+        userHateoasResponse.setIsActive(true);
+        userHateoasResponse.setIsEmailVerified(false);
+        userHateoasResponse.setRoles(List.of(roleResponse));
+        userHateoasResponse.setCreatedAt(LocalDateTime.now());
+        userHateoasResponse.setUpdatedAt(LocalDateTime.now());
 
         userCreateRequest = new UserCreateRequest();
         userCreateRequest.setUsername("newuser");

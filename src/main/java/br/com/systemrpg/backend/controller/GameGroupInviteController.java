@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import br.com.systemrpg.backend.domain.entity.GameGroupParticipant;
 import br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import br.com.systemrpg.backend.mapper.GameGroupParticipantMapper;
 import br.com.systemrpg.backend.service.GameGroupInviteService;
 import br.com.systemrpg.backend.util.MessageUtil;
@@ -50,7 +50,7 @@ public class GameGroupInviteController {
     @ApiResponse(responseCode = "403", description = "Acesso negado")
     @ApiResponse(responseCode = "404", description = "Convite não encontrado")
     @ApiResponse(responseCode = "409", description = "Usuário já participa do grupo")
-    public ResponseEntity<?> useInvite(
+    public ResponseEntity<ResponseApi<GameGroupParticipantResponse>> useInvite(
             @Parameter(description = "Código do convite") @PathVariable String inviteCode,
             HttpServletRequest httpRequest) {
         
@@ -62,7 +62,8 @@ public class GameGroupInviteController {
             return ResponseUtil.okWithSuccess(response, messageUtil.getMessage("controller.gamegroupinvite.used.success"));
                 
         } catch (Exception e) {
-            return ResponseUtil.badRequest("Erro ao usar convite", e.getMessage());
+            ResponseApi<GameGroupParticipantResponse> errorResponse = ResponseApi.error("Erro ao usar convite: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 }

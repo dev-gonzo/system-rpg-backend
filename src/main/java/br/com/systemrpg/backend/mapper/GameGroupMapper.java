@@ -12,7 +12,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 /**
  * Mapper para conversão entre entidades GameGroup e DTOs.
  */
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {UserMapper.class})
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {UserMapper.class, GameGroupMemberMapper.class})
 public interface GameGroupMapper {
 
     /**
@@ -52,5 +52,6 @@ public interface GameGroupMapper {
     @Mapping(target = "accessRule", expression = "java(gameGroup.getAccessRule() != null ? gameGroup.getAccessRule().name() : null)")
     @Mapping(target = "modality", expression = "java(gameGroup.getModality() != null ? gameGroup.getModality().name() : null)")
     @Mapping(target = "currentParticipants", expression = "java(gameGroup.getParticipants() != null ? (int) gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).count() : 0)")
-    GameGroupResponse toResponse(GameGroup gameGroup);
+    @Mapping(target = "participants", expression = "java(gameGroup.getParticipants() != null ? gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).map(participant -> gameGroupMemberMapper.toResponse(participant)).collect(java.util.stream.Collectors.toList()) : java.util.Collections.emptyList())")
+    GameGroupResponse toResponse(GameGroup gameGroup, GameGroupMemberMapper gameGroupMemberMapper);
 }

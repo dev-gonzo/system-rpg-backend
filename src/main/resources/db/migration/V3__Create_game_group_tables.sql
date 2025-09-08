@@ -82,26 +82,27 @@ CREATE INDEX idx_game_group_participant_role ON game_group_participant(role);
 CREATE INDEX idx_game_group_participant_active ON game_group_participant(is_active);
 
 -- Add foreign key constraints
-ALTER TABLE game_group 
-ADD CONSTRAINT fk_game_group_created_by 
-FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
-
 ALTER TABLE game_group_invite 
 ADD CONSTRAINT fk_game_group_invite_group 
 FOREIGN KEY (game_group_id) REFERENCES game_group(id) ON DELETE CASCADE;
-
-ALTER TABLE game_group_invite 
-ADD CONSTRAINT fk_game_group_invite_created_by 
-FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
-
-ALTER TABLE game_group_invite 
-ADD CONSTRAINT fk_game_group_invite_used_by 
-FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE CASCADE;
 
 ALTER TABLE game_group_participant 
 ADD CONSTRAINT fk_game_group_participant_group 
 FOREIGN KEY (game_group_id) REFERENCES game_group(id) ON DELETE CASCADE;
 
-ALTER TABLE game_group_participant 
-ADD CONSTRAINT fk_game_group_participant_user 
-FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+-- Note: Foreign keys to users table commented out temporarily
+-- ALTER TABLE game_group 
+-- ADD CONSTRAINT fk_game_group_created_by 
+-- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
+
+-- ALTER TABLE game_group_invite 
+-- ADD CONSTRAINT fk_game_group_invite_created_by 
+-- FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
+
+-- ALTER TABLE game_group_invite 
+-- ADD CONSTRAINT fk_game_group_invite_used_by 
+-- FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE CASCADE;
+
+-- ALTER TABLE game_group_participant 
+-- ADD CONSTRAINT fk_game_group_participant_user 
+-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;

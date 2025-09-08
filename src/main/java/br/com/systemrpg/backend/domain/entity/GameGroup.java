@@ -249,7 +249,7 @@ public class GameGroup {
      */
     public enum Modality {
         ONLINE(0),
-        PRESENCIAL(1);
+        PRESENTIAL(1);
 
         private final int value;
 

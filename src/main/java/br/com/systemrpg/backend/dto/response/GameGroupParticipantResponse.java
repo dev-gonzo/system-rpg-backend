@@ -21,7 +21,7 @@ public class GameGroupParticipantResponse {
 
     private UUID id;
     
-    private GameGroupResponse gameGroup;
+    // Removido gameGroup para evitar referência circular
     
     private UserResponse user;
     

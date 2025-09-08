@@ -10,7 +10,7 @@ import br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse;
 /**
  * Mapper para conversão entre entidades GameGroupParticipant e DTOs.
  */
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {GameGroupMapper.class, UserMapper.class})
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {UserMapper.class})
 public interface GameGroupParticipantMapper {
 
     /**

@@ -19,8 +19,7 @@ import br.com.systemrpg.backend.dto.JwksResponse;
 import br.com.systemrpg.backend.dto.TokenIntrospectRequest;
 import br.com.systemrpg.backend.dto.TokenIntrospectResponse;
 import br.com.systemrpg.backend.dto.hateoas.AuthHateoasResponse;
-import br.com.systemrpg.backend.dto.response.ErrorResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.mapper.AuthHateoasMapper;
 import br.com.systemrpg.backend.service.AuthService;
@@ -119,25 +118,17 @@ public class AuthController {
 
         try {
             if (!ValidationUtil.isValidAuthHeader(authHeader)) {
-                ErrorResponse errorResponse = new ErrorResponse(
+                return (ResponseEntity<Object>) (ResponseEntity<?>) ResponseUtil.badRequest(
                     messageUtil.getMessage("controller.auth.logout.error"), 
                     "Authorization header is required");
-                return ResponseEntity.badRequest().body(errorResponse);
             }
             
             authService.logout(authHeader);
 
-            SuccessResponse<String> response = new SuccessResponse<>(
-                    messageUtil.getMessage("controller.auth.logout.success")
-            );
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ResponseApi.success(messageUtil.getMessage("controller.auth.logout.success")));
 
         } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse(
-                    messageUtil.getMessage("controller.auth.logout.error"), 
-                    e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(ResponseApi.error(messageUtil.getMessage("controller.auth.logout.error") + ": " + e.getMessage()));
         }
     }
 

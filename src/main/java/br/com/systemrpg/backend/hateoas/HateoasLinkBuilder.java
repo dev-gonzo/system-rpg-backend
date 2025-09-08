@@ -392,6 +392,8 @@ public class HateoasLinkBuilder {
     private void addUserGameGroupLinks(HateoasResponse response, String baseUrl, UUID gameGroupId) {
         // Usuário pode ver e participar de grupos
         response.addLink(baseUrl + GAME_GROUPS_PATH, GAME_GROUPS_REL, GET_METHOD);
+        response.addLink(baseUrl + GAME_GROUPS_PATH + "/my-groups", "my-groups", GET_METHOD);
+        response.addLink(baseUrl + GAME_GROUPS_PATH + SEARCH_PATH, SEARCH_GAME_GROUPS_REL, GET_METHOD);
     }
     
     /**
@@ -399,6 +401,8 @@ public class HateoasLinkBuilder {
      */
     private void addUserIndividualGameGroupLinks(HateoasResponse response, String baseUrl, UUID gameGroupId) {
         // Links limitados para usuários comuns
+        response.addLink(baseUrl + GAME_GROUPS_PATH + "/" + gameGroupId, SELF_REL, GET_METHOD);
+        response.addLink(baseUrl + GAME_GROUPS_PATH + "/" + gameGroupId + "/participants", PARTICIPANTS_REL, GET_METHOD);
     }
     
     // Métodos de verificação de roles removidos - usando AuthorizationUtil

@@ -8,12 +8,13 @@ import br.com.systemrpg.backend.dto.request.GameGroupInviteCreateRequest;
 import br.com.systemrpg.backend.dto.request.GameGroupUpdateRequest;
 import br.com.systemrpg.backend.dto.response.GameGroupInviteResponse;
 import br.com.systemrpg.backend.dto.response.GameGroupResponse;
-import br.com.systemrpg.backend.dto.response.SuccessResponse;
+import br.com.systemrpg.backend.dto.response.ResponseApi;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
 import br.com.systemrpg.backend.mapper.GameGroupHateoasMapper;
 import br.com.systemrpg.backend.mapper.GameGroupInviteMapper;
 import br.com.systemrpg.backend.mapper.GameGroupMapper;
+import br.com.systemrpg.backend.mapper.GameGroupMemberMapper;
 import br.com.systemrpg.backend.service.GameGroupInviteService;
 import br.com.systemrpg.backend.service.GameGroupService;
 import br.com.systemrpg.backend.util.ResponseUtil;
@@ -52,6 +53,7 @@ public class GameGroupController {
     private final GameGroupService gameGroupService;
     private final GameGroupInviteService gameGroupInviteService;
     private final GameGroupMapper gameGroupMapper;
+    private final GameGroupMemberMapper gameGroupMemberMapper;
     private final GameGroupHateoasMapper gameGroupHateoasMapper;
     private final GameGroupInviteMapper gameGroupInviteMapper;
     private final HateoasLinkBuilder hateoasLinkBuilder;
@@ -65,29 +67,19 @@ public class GameGroupController {
     @Operation(summary = "Listar grupos de jogo", description = "Lista todos os grupos de jogo com paginação e filtros opcionais")
     @ApiResponse(responseCode = "200", description = "Lista de grupos de jogo retornada com sucesso")
     @ApiResponse(responseCode = "403", description = "Acesso negado")
-    public ResponseEntity<PagedHateoasResponse<GameGroupHateoasResponse>> listAll(
+    public ResponseEntity<ResponseApi<PagedHateoasResponse<GameGroupHateoasResponse>>> listAll(
             @PageableDefault(size = 20) Pageable pageable,
             @Parameter(description = "Nome da campanha para filtrar") @RequestParam(required = false) String campaignName,
             @Parameter(description = "Sistema de jogo para filtrar") @RequestParam(required = false) String gameSystem,
             @Parameter(description = "Mundo/cenário para filtrar") @RequestParam(required = false) String settingWorld) {
         
-        Page<GameGroup> gameGroups = gameGroupService.findAll(pageable);
-        Page<GameGroupResponse> gameGroupResponses = gameGroups.map(gameGroupMapper::toResponse);
-        PagedHateoasResponse<GameGroupHateoasResponse> response = gameGroupHateoasMapper.toPagedHateoasResponse(gameGroupResponses);
-        
-        // Adicionar links HATEOAS para cada grupo
-        if (response.getContent() != null) {
-            response.getContent().forEach(group -> {
-                hateoasLinkBuilder.addIndividualGameGroupLinks(response, group.getId());
-            });
-        }
-        
-        // Adicionar links de paginação e gerais
+        Page<GameGroup> gameGroups = gameGroupService.findByFilters(campaignName, gameSystem, settingWorld, pageable);
         String queryParams = buildQueryParams(campaignName, gameSystem, settingWorld);
-        hateoasLinkBuilder.addPaginationLinks(response, pageable, "/game-groups", queryParams);
-        hateoasLinkBuilder.addGameGroupLinks(response);
+        PagedHateoasResponse<GameGroupHateoasResponse> response = buildGameGroupListResponse(gameGroups, pageable, "/game-groups", queryParams);
         
-        return ResponseEntity.ok(response);
+        String message = messageUtil.getMessage("controller.gamegroup.list.success");
+        
+        return ResponseUtil.okWithSuccess(response, message);
     }
 
     /**
@@ -98,25 +90,49 @@ public class GameGroupController {
     @Operation(summary = "Listar meus grupos de jogo", description = "Lista apenas os grupos de jogo que o usuário autenticado participa")
     @ApiResponse(responseCode = "200", description = "Lista de grupos do usuário retornada com sucesso")
     @ApiResponse(responseCode = "403", description = "Acesso negado")
-    public ResponseEntity<PagedHateoasResponse<GameGroupHateoasResponse>> listMyGroups(
+    public ResponseEntity<ResponseApi<PagedHateoasResponse<GameGroupHateoasResponse>>> listMyGroups(
             @PageableDefault(size = 20) Pageable pageable,
             HttpServletRequest httpRequest) {
         
         String username = httpRequest.getUserPrincipal().getName();
         Page<GameGroup> gameGroups = gameGroupService.findMyGameGroups(username, pageable);
-        Page<GameGroupResponse> gameGroupResponses = gameGroups.map(gameGroupMapper::toResponse);
-        PagedHateoasResponse<GameGroupHateoasResponse> response = gameGroupHateoasMapper.toPagedHateoasResponse(gameGroupResponses);
+        PagedHateoasResponse<GameGroupHateoasResponse> response = buildGameGroupListResponse(gameGroups, pageable, "/game-groups/my-groups", "");
         
-        // Adicionar links HATEOAS para cada grupo
-        response.getContent().forEach(group -> {
-            hateoasLinkBuilder.addIndividualGameGroupLinks(response, group.getId());
-        });
+        String message = messageUtil.getMessage("controller.gamegroup.mygroups.success");
         
-        // Adicionar links de paginação e gerais
-        hateoasLinkBuilder.addPaginationLinks(response, pageable, "/game-groups/my-groups", "");
-        hateoasLinkBuilder.addGameGroupLinks(response);
+        return ResponseUtil.okWithSuccess(response, message);
+    }
+
+    /**
+     * Constrói a resposta paginada com links HATEOAS para listas de grupos de jogo.
+     */
+    private PagedHateoasResponse<GameGroupHateoasResponse> buildGameGroupListResponse(Page<GameGroup> gameGroups, Pageable pageable, String basePath, String queryParams) {
+        Page<GameGroupResponse> gameGroupResponses = gameGroups.map(gameGroup -> gameGroupMapper.toResponse(gameGroup, gameGroupMemberMapper));
+        PagedHateoasResponse<GameGroupHateoasResponse> hateoasResponse = gameGroupHateoasMapper.toPagedHateoasResponse(gameGroupResponses);
         
-        return ResponseEntity.ok(response);
+        addIndividualGameGroupLinks(hateoasResponse, gameGroups);
+        addCollectionLinks(hateoasResponse, pageable, basePath, queryParams);
+        
+        return hateoasResponse;
+    }
+
+    /**
+     * Adiciona links HATEOAS individuais para cada grupo de jogo.
+     */
+    private void addIndividualGameGroupLinks(PagedHateoasResponse<GameGroupHateoasResponse> hateoasResponse, Page<GameGroup> gameGroups) {
+        for (int i = 0; i < hateoasResponse.getContent().size(); i++) {
+            GameGroupHateoasResponse gameGroupHateoas = hateoasResponse.getContent().get(i);
+            GameGroup originalGameGroup = gameGroups.getContent().get(i);
+            hateoasLinkBuilder.addIndividualGameGroupLinks(gameGroupHateoas, originalGameGroup.getId());
+        }
+    }
+
+    /**
+     * Adiciona links HATEOAS da coleção e paginação.
+     */
+    private void addCollectionLinks(PagedHateoasResponse<GameGroupHateoasResponse> hateoasResponse, Pageable pageable, String basePath, String queryParams) {
+        hateoasLinkBuilder.addGameGroupLinks(hateoasResponse);
+        hateoasLinkBuilder.addPaginationLinks(hateoasResponse, pageable, basePath, queryParams);
     }
 
     /**
@@ -125,11 +141,11 @@ public class GameGroupController {
     @GetMapping("/{id}")
     @PreAuthorize("@gameGroupService.canViewGroup(#id, authentication.name)")
     @Operation(summary = "Buscar grupo por ID", description = "Busca um grupo de jogo pelo seu ID")
-    public ResponseEntity<SuccessResponse<GameGroupHateoasResponse>> findById(
+    public ResponseEntity<ResponseApi<GameGroupHateoasResponse>> findById(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id) {
         
         GameGroup gameGroup = gameGroupService.findById(id);
-        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(gameGroup);
+        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(gameGroup, gameGroupMemberMapper);
         GameGroupHateoasResponse hateoasResponse = gameGroupHateoasMapper.toHateoasResponse(gameGroupResponse);
         
         // Adicionar links HATEOAS
@@ -149,7 +165,7 @@ public class GameGroupController {
     @ApiResponse(responseCode = "201", description = "Grupo criado com sucesso")
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @ApiResponse(responseCode = "403", description = "Acesso negado")
-    public ResponseEntity<SuccessResponse<GameGroupHateoasResponse>> create(
+    public ResponseEntity<ResponseApi<GameGroupHateoasResponse>> create(
             @Parameter(description = "Dados do grupo de jogo")
             @Valid @RequestBody GameGroupCreateRequest request,
             HttpServletRequest httpRequest) {
@@ -162,7 +178,7 @@ public class GameGroupController {
         
         GameGroup gameGroupEntity = gameGroupMapper.toEntity(request);
         GameGroup createdGroup = gameGroupService.createGameGroup(gameGroupEntity, createdByUserId);
-        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(createdGroup);
+        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(createdGroup, gameGroupMemberMapper);
         GameGroupHateoasResponse hateoasResponse = gameGroupHateoasMapper.toHateoasResponse(gameGroupResponse);
         
         // Adicionar links HATEOAS
@@ -179,14 +195,14 @@ public class GameGroupController {
     @PutMapping("/{id}")
     @PreAuthorize("@gameGroupService.isGroupOwner(#id, authentication.name)")
     @Operation(summary = "Atualizar grupo de jogo", description = "Atualiza um grupo de jogo existente")
-    public ResponseEntity<SuccessResponse<GameGroupHateoasResponse>> update(
+    public ResponseEntity<ResponseApi<GameGroupHateoasResponse>> update(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id,
             @Valid @RequestBody GameGroupUpdateRequest request) {
         
         GameGroup existingGroup = gameGroupService.findById(id);
         gameGroupMapper.updateEntityFromRequest(request, existingGroup);
         GameGroup updatedGroup = gameGroupService.updateGameGroup(id, existingGroup);
-        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(updatedGroup);
+        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(updatedGroup, gameGroupMemberMapper);
         GameGroupHateoasResponse hateoasResponse = gameGroupHateoasMapper.toHateoasResponse(gameGroupResponse);
         
         // Adicionar links HATEOAS
@@ -203,11 +219,11 @@ public class GameGroupController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("@gameGroupService.isGroupOwner(#id, authentication.name)")
     @Operation(summary = "Ativar/Desativar grupo", description = "Ativa ou desativa um grupo de jogo")
-    public ResponseEntity<SuccessResponse<GameGroupHateoasResponse>> toggleStatus(
+    public ResponseEntity<ResponseApi<GameGroupHateoasResponse>> toggleStatus(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id) {
         
         GameGroup gameGroup = gameGroupService.toggleActiveStatus(id);
-        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(gameGroup);
+        GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(gameGroup, gameGroupMemberMapper);
         GameGroupHateoasResponse hateoasResponse = gameGroupHateoasMapper.toHateoasResponse(gameGroupResponse);
         
         // Adicionar links HATEOAS
@@ -226,7 +242,7 @@ public class GameGroupController {
     @DeleteMapping("/{id}")
     @PreAuthorize("@gameGroupService.isGroupOwner(#id, authentication.name)")
     @Operation(summary = "Excluir grupo de jogo", description = "Exclui um grupo de jogo")
-    public ResponseEntity<SuccessResponse<Void>> delete(
+    public ResponseEntity<ResponseApi<Void>> delete(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id) {
         
         gameGroupService.deleteGameGroup(id);
@@ -244,29 +260,25 @@ public class GameGroupController {
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode criar convites")
     @ApiResponse(responseCode = "404", description = "Grupo não encontrado")
-    public ResponseEntity<?> createInvite(
+    public ResponseEntity<ResponseApi<GameGroupInviteResponse>> createInvite(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id,
             @Parameter(description = "Dados do convite")
             @Valid @RequestBody GameGroupInviteCreateRequest request,
             HttpServletRequest httpRequest) {
         
-        try {
-            String username = httpRequest.getUserPrincipal().getName();
-            
-            // Converte string role para enum
-            GameGroupInvite.InviteRole role = GameGroupInvite.InviteRole.valueOf(request.getRole().toUpperCase());
-            
-            GameGroupInvite invite = gameGroupInviteService.createInvite(
-                id, username, role, request.getIsUniqueUse(), request.getExpiresAt());
-            
-            GameGroupInviteResponse response = gameGroupInviteMapper.toResponse(invite);
-            
-            return ResponseEntity.status(201)
-                .body(new SuccessResponse<>(messageUtil.getMessage("controller.gamegroup.invite.created.success"), response));
-                
-        } catch (IllegalArgumentException e) {
-            return ResponseUtil.badRequest("Erro ao criar convite", e.getMessage());
-        }
+        String username = httpRequest.getUserPrincipal().getName();
+        
+        // Converte string role para enum
+        GameGroupInvite.InviteRole role = GameGroupInvite.InviteRole.valueOf(request.getRole().toUpperCase());
+        
+        GameGroupInvite invite = gameGroupInviteService.createInvite(
+            id, username, role, request.getIsUniqueUse(), request.getExpiresAt());
+        
+        GameGroupInviteResponse response = gameGroupInviteMapper.toResponse(invite);
+        
+        String message = messageUtil.getMessage("controller.gamegroup.invite.created.success");
+        
+        return ResponseUtil.createdWithSuccess(response, message);
     }
 
     /**
@@ -278,7 +290,7 @@ public class GameGroupController {
     @ApiResponse(responseCode = "200", description = "Lista de convites retornada com sucesso")
     @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode ver convites")
     @ApiResponse(responseCode = "404", description = "Grupo não encontrado")
-    public ResponseEntity<SuccessResponse<List<GameGroupInviteResponse>>> listInvites(
+    public ResponseEntity<ResponseApi<List<GameGroupInviteResponse>>> listInvites(
             @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id) {
         
         List<GameGroupInvite> invites = gameGroupInviteService.findByGameGroupId(id);
@@ -298,7 +310,7 @@ public class GameGroupController {
     @ApiResponse(responseCode = "200", description = "Convite removido com sucesso")
     @ApiResponse(responseCode = "403", description = "Acesso negado")
     @ApiResponse(responseCode = "404", description = "Convite não encontrado")
-    public ResponseEntity<SuccessResponse<Void>> deleteInvite(
+    public ResponseEntity<ResponseApi<Void>> deleteInvite(
             @Parameter(description = "ID do convite") @PathVariable UUID inviteId,
             HttpServletRequest httpRequest) {
         
