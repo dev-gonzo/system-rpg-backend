@@ -29,7 +29,7 @@ public class GameGroupHateoasResponse extends HateoasResponse {
     
     private String campaignName;
     
-    private String description;
+    private String shortDescription;
     
     private String gameSystem;
     
