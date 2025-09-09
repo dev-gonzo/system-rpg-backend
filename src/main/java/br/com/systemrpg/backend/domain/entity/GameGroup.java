@@ -27,8 +27,6 @@ import jakarta.validation.constraints.Max;
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"participants"})
-@Getter
-@Setter
 public class GameGroup {
 
     @Id

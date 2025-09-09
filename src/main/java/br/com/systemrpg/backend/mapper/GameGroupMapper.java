@@ -25,9 +25,9 @@ public interface GameGroupMapper {
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "participants", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : null)")
-    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : null)")
-    @Mapping(target = "modality", expression = "java(request.getModality() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : null)")
+    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null && !request.getVisibility().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : null)")
+    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null && !request.getAccessRule().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : null)")
+    @Mapping(target = "modality", expression = "java(request.getModality() != null && !request.getModality().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : null)")
     GameGroup toEntity(GameGroupCreateRequest request);
     
     /**
@@ -40,9 +40,9 @@ public interface GameGroupMapper {
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "participants", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : null)")
-    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : null)")
-    @Mapping(target = "modality", expression = "java(request.getModality() != null ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : null)")
+    @Mapping(target = "visibility", expression = "java(request.getVisibility() != null && !request.getVisibility().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.Visibility.valueOf(request.getVisibility()) : gameGroup.getVisibility())")
+    @Mapping(target = "accessRule", expression = "java(request.getAccessRule() != null && !request.getAccessRule().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.AccessRule.valueOf(request.getAccessRule()) : gameGroup.getAccessRule())")
+    @Mapping(target = "modality", expression = "java(request.getModality() != null && !request.getModality().isEmpty() ? br.com.systemrpg.backend.domain.entity.GameGroup.Modality.valueOf(request.getModality()) : gameGroup.getModality())")
     void updateEntityFromRequest(GameGroupUpdateRequest request, @MappingTarget GameGroup gameGroup);
 
     /**
@@ -53,5 +53,9 @@ public interface GameGroupMapper {
     @Mapping(target = "modality", expression = "java(gameGroup.getModality() != null ? gameGroup.getModality().name() : null)")
     @Mapping(target = "currentParticipants", expression = "java(gameGroup.getParticipants() != null ? (int) gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).count() : 0)")
     @Mapping(target = "participants", expression = "java(gameGroup.getParticipants() != null ? gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).map(participant -> gameGroupMemberMapper.toResponse(participant)).collect(java.util.stream.Collectors.toList()) : java.util.Collections.emptyList())")
+    @Mapping(target = "themesContent", source = "gameGroup.themesContent")
+    @Mapping(target = "punctualityAttendance", source = "gameGroup.punctualityAttendance")
+    @Mapping(target = "houseRules", source = "gameGroup.houseRules")
+    @Mapping(target = "behavioralExpectations", source = "gameGroup.behavioralExpectations")
     GameGroupResponse toResponse(GameGroup gameGroup, GameGroupMemberMapper gameGroupMemberMapper);
 }

@@ -67,6 +67,7 @@ public class SecurityConfiguration {
             http
                     .authorizeHttpRequests(authorize -> authorize
                             // Endpoints públicos
+                            .requestMatchers("/error").permitAll()
                             .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                             .requestMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
                             .requestMatchers("/swagger-resources/**").permitAll()

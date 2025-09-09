@@ -29,11 +29,15 @@ public class GameGroupHateoasResponse extends HateoasResponse {
     
     private String campaignName;
     
+    private String description;
+    
     private String shortDescription;
     
     private String gameSystem;
     
     private String settingWorld;
+    
+    private String visibility; // PUBLIC, FRIENDS, PRIVATE
     
     private String accessRule; // FREE, FRIENDS, APPROVAL
     
@@ -44,6 +48,14 @@ public class GameGroupHateoasResponse extends HateoasResponse {
     private Integer currentParticipants;
     
     private List<GameGroupMemberResponse> participants;
+    
+    private String themesContent;
+    
+    private String punctualityAttendance;
+    
+    private String houseRules;
+    
+    private String behavioralExpectations;
     
     private String location;
     
