@@ -49,4 +49,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.setOrder(Integer.MAX_VALUE);
     }
 
+    // Removido addArgumentResolvers - usando configuração automática do Spring Boot
+    // As configurações estão definidas no application.properties:
+    // spring.data.web.pageable.* properties
+
 }

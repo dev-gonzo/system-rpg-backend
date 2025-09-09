@@ -62,13 +62,14 @@ public interface GameGroupRepository extends JpaRepository<GameGroup, UUID> {
 
     /**
      * Busca grupos de jogo por múltiplos filtros (case insensitive), excluindo grupos deletados.
+     * TEMPORÁRIO: Usando SQL nativo para evitar problema com LOWER() em JPQL
      */
-    @EntityGraph(attributePaths = {"participants"})
-    @Query("SELECT g FROM GameGroup g WHERE g.deletedAt IS NULL " +
-           "AND (:campaignName IS NULL OR LOWER(g.campaignName) LIKE LOWER(CONCAT('%', :campaignName, '%'))) " +
-           "AND (:gameSystem IS NULL OR LOWER(g.gameSystem) LIKE LOWER(CONCAT('%', :gameSystem, '%'))) " +
-           "AND (:settingWorld IS NULL OR LOWER(g.settingWorld) LIKE LOWER(CONCAT('%', :settingWorld, '%'))) " +
-           "ORDER BY g.createdAt DESC")
+    @Query(value = "SELECT * FROM game_group g " +
+           "WHERE g.deleted_at IS NULL " +
+           "AND (:campaignName IS NULL OR LOWER(g.campaign_name) LIKE LOWER(CONCAT('%', CAST(:campaignName AS TEXT), '%'))) " +
+           "AND (:gameSystem IS NULL OR LOWER(g.game_system) LIKE LOWER(CONCAT('%', CAST(:gameSystem AS TEXT), '%'))) " +
+           "AND (:settingWorld IS NULL OR LOWER(g.setting_world) LIKE LOWER(CONCAT('%', CAST(:settingWorld AS TEXT), '%'))) " +
+           "ORDER BY g.created_at DESC", nativeQuery = true)
     Page<GameGroup> findByFiltersAndDeletedAtIsNull(
         @Param("campaignName") String campaignName,
         @Param("gameSystem") String gameSystem,

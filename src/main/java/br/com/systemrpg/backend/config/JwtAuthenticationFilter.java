@@ -26,6 +26,10 @@ import br.com.systemrpg.backend.util.TokenValidationUtil;
 
 /**
  * Filtro JWT para interceptar e validar tokens de autenticação.
+ * Este filtro roda em todas as requisições. Se um token JWT válido for encontrado,
+ * ele autentica o usuário. Se nenhum token for encontrado, ele simplesmente passa
+ * a requisição para o próximo filtro, permitindo que o Spring Security aplique
+ * as regras de 'permitAll' ou de autenticação.
  */
 @Slf4j
 @Component
@@ -50,27 +54,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
         
+        final String token = extractTokenFromRequest(request);
+
+        // Se não houver token, passa para o próximo filtro. Spring Security decidirá se a rota é pública.
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            log.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
+            log.debug("Token found, attempting to validate and authenticate...");
 
-            String token = extractTokenFromRequest(request);
-            if (token == null) {
-                log.debug("No token found in request");
-                filterChain.doFilter(request, response);
-                return;
+            if (validateToken(token, response)) {
+                authenticateUser(token, request);
             }
-            
-            log.debug("Token found: {}", maskToken(token));
-
-            if (!validateToken(token, response)) {
-                return;
-            }
-
-            authenticateUser(token, request);
+            // Se a validação falhar, a resposta de erro já foi enviada e o método validateToken retorna false.
+            // Não devemos continuar a cadeia de filtros se o token for inválido.
 
         } catch (Exception e) {
+            log.error("An unexpected error occurred during JWT processing", e);
             sendUnauthorizedResponse(response, messageUtil.getMessage("config.jwt.token.validation.error"));
-            return;
+            return; // Garante que não continuaremos a cadeia em caso de exceção
         }
 
         filterChain.doFilter(request, response);
@@ -228,38 +232,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.getWriter().write(jsonResponse);
     }
 
-    /**
-     * Define quais requisições devem ser filtradas.
-     * Pula endpoints públicos como login, registro, etc.
-     */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        String contextPath = request.getContextPath();
 
-        List<String> publicEndpoints = List.of(
-            "/api/v1/auth/login",
-            "/api/v1/auth/logout",
-            "/api/v1/auth/users/register",
-            "/api/v1/users/check-username",
-            "/api/v1/users/check-email",
-            "/api/v1/auth/refresh",
-            "/api/v1/auth/introspect",
-            "/actuator",
-            "/swagger-ui",
-            "/swagger-ui.html",
-            "/swagger-resources",
-            "/webjars",
-            "/api-docs",
-            "/v3/api-docs",
-            "/favicon.ico"
-        );
-
-        String pathWithoutContext = path;
-        if (contextPath != null && !contextPath.isEmpty() && path.startsWith(contextPath)) {
-            pathWithoutContext = path.substring(contextPath.length());
-        }
-
-        return publicEndpoints.stream().anyMatch(pathWithoutContext::startsWith);
-    }
 }
