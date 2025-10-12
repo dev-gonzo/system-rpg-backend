@@ -3,6 +3,10 @@ package br.com.systemrpg.backend.controller;
 import br.com.systemrpg.backend.domain.entity.GameGroup;
 import br.com.systemrpg.backend.domain.entity.GameGroupInvite;
 import br.com.systemrpg.backend.dto.hateoas.GameGroupHateoasResponse;
+import br.com.systemrpg.backend.dto.request.AdventureCreateRequest;
+import br.com.systemrpg.backend.dto.response.AdventureResponse;
+import br.com.systemrpg.backend.mapper.AdventureMapper;
+import br.com.systemrpg.backend.service.AdventureService;
 import br.com.systemrpg.backend.dto.request.GameGroupCreateRequest;
 import br.com.systemrpg.backend.dto.request.GameGroupInviteCreateRequest;
 import br.com.systemrpg.backend.dto.request.GameGroupUpdateRequest;
@@ -58,6 +62,8 @@ public class GameGroupController {
     private final GameGroupInviteMapper gameGroupInviteMapper;
     private final HateoasLinkBuilder hateoasLinkBuilder;
     private final MessageUtil messageUtil;
+    private final AdventureService adventureService;
+    private final AdventureMapper adventureMapper;
 
     /**
      * Lista todos os grupos de jogo com paginação e filtros.
@@ -101,6 +107,37 @@ public class GameGroupController {
         String message = messageUtil.getMessage("controller.gamegroup.mygroups.success");
         
         return ResponseUtil.okWithSuccess(response, message);
+    }
+
+    /**
+     * Cria uma nova aventura dentro de um grupo de jogo.
+     */
+    @PostMapping("/{id}/adventures")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#p0, authentication.name)")
+    @Operation(summary = "Criar aventura no grupo", description = "Cria uma nova aventura dentro de um grupo de jogo (apenas MASTER)")
+    @ApiResponse(responseCode = "201", description = "Aventura criada com sucesso")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas MASTER do grupo pode criar aventuras")
+    @ApiResponse(responseCode = "404", description = "Grupo não encontrado")
+    public ResponseEntity<ResponseApi<AdventureResponse>> createAdventureInGroup(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable java.util.UUID id,
+            @Parameter(description = "Dados da aventura - sem necessidade de gameGroupId no corpo") @RequestBody AdventureCreateRequest request,
+            HttpServletRequest httpRequest) {
+
+        java.util.UUID createdByUserId = (java.util.UUID) httpRequest.getAttribute("userId");
+        if (createdByUserId == null) {
+            throw new IllegalStateException("ID do usuário não encontrado na requisição");
+        }
+
+        // Força o gameGroupId a partir do path, permitindo corpo sem este campo
+        request.setGameGroupId(id);
+
+        br.com.systemrpg.backend.domain.entity.GameGroup group = gameGroupService.findById(id);
+        br.com.systemrpg.backend.domain.entity.Adventure adventureEntity = adventureMapper.toEntity(request, group, createdByUserId);
+        br.com.systemrpg.backend.domain.entity.Adventure createdAdventure = adventureService.createAdventure(adventureEntity, createdByUserId);
+
+        AdventureResponse response = adventureMapper.toResponse(createdAdventure);
+        String message = messageUtil.getMessage("controller.adventure.created.success");
+        return ResponseUtil.createdWithSuccess(response, message);
     }
 
     /**
