@@ -54,9 +54,18 @@ public class GameGroupParticipantService {
      */
     @Transactional(readOnly = true)
     public Page<GameGroupParticipantResponse> findAll(Pageable pageable, UUID gameGroupId, UUID userId, String role, Boolean isActive) {
-        // Por simplicidade, vamos usar apenas paginação básica por enquanto
-        // TODO: Implementar filtros específicos no repository
-        Page<GameGroupParticipant> participants = participantRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+        Integer roleValue = null;
+        if (role != null && !role.isEmpty()) {
+            try {
+                GameGroupParticipant.ParticipantRole parsed = GameGroupParticipant.ParticipantRole.valueOf(role.toUpperCase());
+                roleValue = parsed.getValue();
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Role inválido: " + role);
+            }
+        }
+
+        Page<GameGroupParticipant> participants = participantRepository
+            .findAllByFilters(gameGroupId, userId, roleValue, isActive, pageable);
         return participants.map(gameGroupParticipantMapper::toResponse);
     }
 
@@ -130,11 +139,46 @@ public class GameGroupParticipantService {
                 .getMessage("service.user.inactive", new Object[]{userId}, LocaleContextHolder.getLocale()));
         }
 
-        // Verifica se o usuário já participa do grupo
+        // Verifica se o usuário já participa do grupo (ativo)
         if (participantRepository.existsByGameGroupIdAndUserIdAndDeletedAtIsNull(gameGroupId, userId)) {
             throw new IllegalArgumentException(messageSource
                 .getMessage("service.gameGroupParticipant.already.exists", 
                     new Object[]{userId, gameGroupId}, LocaleContextHolder.getLocale()));
+        }
+
+        // Se existe um vínculo com exclusão lógica, reativa em vez de criar outro
+        java.util.Optional<GameGroupParticipant> maybeSoftDeleted = participantRepository.findByGameGroupIdAndUserId(gameGroupId, userId);
+        if (maybeSoftDeleted.isPresent() && maybeSoftDeleted.get().getDeletedAt() != null) {
+            GameGroupParticipant participant = maybeSoftDeleted.get();
+
+            // Verifica se já existe um master ativo no grupo quando a reativação for como MASTER
+            if (role == GameGroupParticipant.ParticipantRole.MASTER) {
+                if (participantRepository.findMasterByGameGroupIdAndDeletedAtIsNull(gameGroupId).isPresent()) {
+                    throw new IllegalArgumentException(messageSource
+                        .getMessage("service.gameGroupParticipant.master.already.exists", 
+                            new Object[]{gameGroupId}, LocaleContextHolder.getLocale()));
+                }
+            }
+
+            // Verifica limite de participantes (reativação conta como +1)
+            if (gameGroup.getMaxPlayers() != null) {
+                long currentParticipants = participantRepository.countActiveParticipantsByGameGroupId(gameGroupId);
+                if (currentParticipants >= gameGroup.getMaxPlayers()) {
+                    throw new IllegalArgumentException(messageSource
+                        .getMessage("service.gameGroupParticipant.max.participants.reached", 
+                            new Object[]{gameGroup.getMaxPlayers()}, LocaleContextHolder.getLocale()));
+                }
+            }
+
+            // Reativar: zera deletedAt, ativa e atualiza role conforme solicitado
+            participant.setDeletedAt(null);
+            participant.setIsActive(true);
+            participant.setRole(role.getValue());
+            participant.setUpdatedAt(LocalDateTime.now());
+
+            GameGroupParticipant savedParticipant = participantRepository.save(participant);
+            log.info("Participante reativado com sucesso: {} no grupo {}", userId, gameGroupId);
+            return savedParticipant;
         }
 
         // Verifica se já existe um master no grupo (apenas um master por grupo)
@@ -156,7 +200,7 @@ public class GameGroupParticipantService {
             }
         }
 
-        // Cria o participante
+        // Cria o participante (nenhum vínculo anterior encontrado)
         GameGroupParticipant participant = new GameGroupParticipant();
         participant.setGameGroup(gameGroup);
         participant.setUser(user);
@@ -234,6 +278,58 @@ public class GameGroupParticipantService {
 
         participantRepository.save(participant);
         log.info("Participante removido com sucesso: {}", id);
+    }
+
+    /**
+     * Remove um participante por groupId e userId (exclusão lógica).
+     */
+    @Transactional
+    public void removeParticipantByGroupAndUser(UUID gameGroupId, UUID userId) {
+        log.info("Removendo participante por grupo e usuário: groupId={}, userId={}", gameGroupId, userId);
+
+        GameGroupParticipant participant = participantRepository
+            .findByGameGroupIdAndUserIdAndDeletedAtIsNull(gameGroupId, userId)
+            .orElseThrow(() -> new RecordNotFoundException(messageSource
+                .getMessage("service.gameGroupParticipant.not.found", new Object[]{userId}, LocaleContextHolder.getLocale())));
+
+        if (participant.getRole().equals(GameGroupParticipant.ParticipantRole.MASTER.getValue())) {
+            throw new IllegalArgumentException(messageSource
+                .getMessage("service.gameGroupParticipant.master.cannot.remove", 
+                    new Object[]{participant.getId()}, LocaleContextHolder.getLocale()));
+        }
+
+        participant.setDeletedAt(LocalDateTime.now());
+        participant.setUpdatedAt(LocalDateTime.now());
+        participantRepository.save(participant);
+        log.info("Participante removido com sucesso por groupId/userId: participantId={}", participant.getId());
+    }
+
+    /**
+     * Remove um participante por groupId e username (exclusão lógica).
+     */
+    @Transactional
+    public void removeParticipantByGroupAndUsername(UUID gameGroupId, String username) {
+        log.info("Removendo participante por grupo e username: groupId={}, username={} ", gameGroupId, username);
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RecordNotFoundException(messageSource
+                .getMessage("service.user.not.found", new Object[]{username}, LocaleContextHolder.getLocale())));
+
+        GameGroupParticipant participant = participantRepository
+            .findByGameGroupIdAndUserIdAndDeletedAtIsNull(gameGroupId, user.getId())
+            .orElseThrow(() -> new RecordNotFoundException(messageSource
+                .getMessage("service.gameGroupParticipant.not.found", new Object[]{username}, LocaleContextHolder.getLocale())));
+
+        if (participant.getRole().equals(GameGroupParticipant.ParticipantRole.MASTER.getValue())) {
+            throw new IllegalArgumentException(messageSource
+                .getMessage("service.gameGroupParticipant.master.cannot.remove", 
+                    new Object[]{participant.getId()}, LocaleContextHolder.getLocale()));
+        }
+
+        participant.setDeletedAt(LocalDateTime.now());
+        participant.setUpdatedAt(LocalDateTime.now());
+        participantRepository.save(participant);
+        log.info("Participante removido com sucesso por groupId/username: participantId={}", participant.getId());
     }
 
     /**

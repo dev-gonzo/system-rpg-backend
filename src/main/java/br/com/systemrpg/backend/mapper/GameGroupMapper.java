@@ -52,7 +52,7 @@ public interface GameGroupMapper {
     @Mapping(target = "accessRule", expression = "java(gameGroup.getAccessRule() != null ? gameGroup.getAccessRule().name() : null)")
     @Mapping(target = "modality", expression = "java(gameGroup.getModality() != null ? gameGroup.getModality().name() : null)")
     @Mapping(target = "currentParticipants", expression = "java(gameGroup.getParticipants() != null ? (int) gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).count() : 0)")
-    @Mapping(target = "participants", expression = "java(gameGroup.getParticipants() != null ? gameGroup.getParticipants().stream().filter(p -> p.getIsActive() && p.getDeletedAt() == null).map(participant -> gameGroupMemberMapper.toResponse(participant)).collect(java.util.stream.Collectors.toList()) : java.util.Collections.emptyList())")
+    @Mapping(target = "participants", expression = "java(gameGroup.getParticipants() != null ? gameGroup.getParticipants().stream().filter(p -> p.getDeletedAt() == null).map(participant -> gameGroupMemberMapper.toResponse(participant)).collect(java.util.stream.Collectors.toList()) : java.util.Collections.emptyList())")
     @Mapping(target = "themesContent", source = "gameGroup.themesContent")
     @Mapping(target = "punctualityAttendance", source = "gameGroup.punctualityAttendance")
     @Mapping(target = "houseRules", source = "gameGroup.houseRules")

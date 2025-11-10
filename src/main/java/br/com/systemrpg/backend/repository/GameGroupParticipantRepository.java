@@ -70,6 +70,14 @@ public interface GameGroupParticipantRepository extends JpaRepository<GameGroupP
     Optional<GameGroupParticipant> findByGameGroupIdAndUserIdAndDeletedAtIsNull(@Param("gameGroupId") UUID gameGroupId, @Param("userId") UUID userId);
 
     /**
+     * Busca um participante por grupo e usuário, incluindo registros com exclusão lógica.
+     * Útil para reativar (undelete) um vínculo previamente removido.
+     */
+    @EntityGraph(attributePaths = {"gameGroup", "user"})
+    @Query("SELECT p FROM GameGroupParticipant p WHERE p.gameGroup.id = :gameGroupId AND p.user.id = :userId")
+    Optional<GameGroupParticipant> findByGameGroupIdAndUserId(@Param("gameGroupId") UUID gameGroupId, @Param("userId") UUID userId);
+
+    /**
      * Verifica se um usuário já participa de um grupo específico, excluindo participantes deletados.
      */
     @Query("SELECT COUNT(p) > 0 FROM GameGroupParticipant p WHERE p.gameGroup.id = :gameGroupId AND p.user.id = :userId AND p.deletedAt IS NULL")
@@ -93,4 +101,21 @@ public interface GameGroupParticipantRepository extends JpaRepository<GameGroupP
      */
     @EntityGraph(attributePaths = {"gameGroup", "user"})
     Page<GameGroupParticipant> findByDeletedAtIsNullOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * Lista participantes com filtros opcionais (gameGroupId, userId, role, isActive), excluindo deletados.
+     */
+    @EntityGraph(attributePaths = {"gameGroup", "user"})
+    @Query("SELECT p FROM GameGroupParticipant p \n"
+         + "WHERE p.deletedAt IS NULL \n"
+         + "AND (:gameGroupId IS NULL OR p.gameGroup.id = :gameGroupId) \n"
+         + "AND (:userId IS NULL OR p.user.id = :userId) \n"
+         + "AND (:role IS NULL OR p.role = :role) \n"
+         + "AND (:isActive IS NULL OR p.isActive = :isActive) \n"
+         + "ORDER BY p.createdAt DESC")
+    Page<GameGroupParticipant> findAllByFilters(@Param("gameGroupId") UUID gameGroupId,
+                                                @Param("userId") UUID userId,
+                                                @Param("role") Integer role,
+                                                @Param("isActive") Boolean isActive,
+                                                Pageable pageable);
 }

@@ -249,6 +249,9 @@ public class HateoasLinkBuilder {
             response.addLink(baseUrl + USERS_PATH + SEARCH_PATH, SEARCH_USERS_REL, GET_METHOD);
         } else if (hasManagerRole(authorities)) {
             response.addLink(baseUrl + USERS_PATH + SEARCH_PATH, SEARCH_USERS_REL, GET_METHOD);
+        } else {
+            // Usuários autenticados também podem buscar
+            response.addLink(baseUrl + USERS_PATH + SEARCH_PATH, SEARCH_USERS_REL, GET_METHOD);
         }
     }
     

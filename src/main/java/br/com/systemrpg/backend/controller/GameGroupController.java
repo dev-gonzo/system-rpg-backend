@@ -13,12 +13,16 @@ import br.com.systemrpg.backend.dto.request.GameGroupUpdateRequest;
 import br.com.systemrpg.backend.dto.response.GameGroupInviteResponse;
 import br.com.systemrpg.backend.dto.response.GameGroupResponse;
 import br.com.systemrpg.backend.dto.response.ResponseApi;
+import br.com.systemrpg.backend.dto.request.GameGroupParticipantCreateRequest;
+import br.com.systemrpg.backend.dto.request.GameGroupParticipantAddRequest;
+import br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse;
 import br.com.systemrpg.backend.hateoas.HateoasLinkBuilder;
 import br.com.systemrpg.backend.hateoas.PagedHateoasResponse;
 import br.com.systemrpg.backend.mapper.GameGroupHateoasMapper;
 import br.com.systemrpg.backend.mapper.GameGroupInviteMapper;
 import br.com.systemrpg.backend.mapper.GameGroupMapper;
 import br.com.systemrpg.backend.mapper.GameGroupMemberMapper;
+import br.com.systemrpg.backend.mapper.GameGroupParticipantMapper;
 import br.com.systemrpg.backend.service.GameGroupInviteService;
 import br.com.systemrpg.backend.service.GameGroupService;
 import br.com.systemrpg.backend.util.ResponseUtil;
@@ -64,6 +68,8 @@ public class GameGroupController {
     private final MessageUtil messageUtil;
     private final AdventureService adventureService;
     private final AdventureMapper adventureMapper;
+    private final br.com.systemrpg.backend.service.GameGroupParticipantService gameGroupParticipantService;
+    private final GameGroupParticipantMapper gameGroupParticipantMapper;
 
     /**
      * Lista todos os grupos de jogo com paginação e filtros.
@@ -141,6 +147,123 @@ public class GameGroupController {
     }
 
     /**
+     * Adiciona um participante ao grupo de jogo (alias aninhado).
+     */
+    @PostMapping("/{id}/participants")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#id, authentication.name)")
+    @Operation(summary = "Adicionar participante ao grupo", description = "Adiciona um participante ao grupo de jogo (apenas MASTER/owner)")
+    @ApiResponse(responseCode = "201", description = "Participante adicionado com sucesso")
+    @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode adicionar participantes")
+    @ApiResponse(responseCode = "404", description = "Grupo ou usuário não encontrado")
+    public ResponseEntity<ResponseApi<GameGroupParticipantResponse>> addParticipantToGroup(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id,
+            @Parameter(description = "Dados do participante - informe userId e opcionalmente role") @Valid @RequestBody GameGroupParticipantAddRequest request) {
+
+        GameGroupParticipantCreateRequest effectiveRequest = GameGroupParticipantCreateRequest.builder()
+                .gameGroupId(id)
+                .userId(request.getUserId())
+                .role(request.getRole())
+                .build();
+
+        GameGroupParticipantResponse participant = gameGroupParticipantService.create(effectiveRequest);
+        String message = messageUtil.getMessage("controller.gamegroupparticipant.created.success");
+        return ResponseUtil.createdWithSuccess(participant, message);
+    }
+
+    /**
+     * Ativa ou desativa um participante (alias aninhado).
+     * Observação: o corpo enviado (como {"isActive": false}) é ignorado; a operação é um toggle.
+     */
+    @PatchMapping("/{groupId}/participants/{participantId}/status")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#groupId, authentication.name)")
+    @Operation(summary = "Ativar/Desativar participante do grupo", description = "Alterna o status ativo de um participante (apenas MASTER/owner)")
+    @ApiResponse(responseCode = "200", description = "Status do participante alterado com sucesso")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode gerenciar participantes")
+    @ApiResponse(responseCode = "404", description = "Participante não encontrado")
+    public ResponseEntity<ResponseApi<br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse>> toggleParticipantStatusInGroup(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID groupId,
+            @Parameter(description = "ID do participante") @PathVariable UUID participantId) {
+
+        br.com.systemrpg.backend.domain.entity.GameGroupParticipant participant = gameGroupParticipantService.toggleActiveStatus(participantId);
+        br.com.systemrpg.backend.dto.response.GameGroupParticipantResponse participantResponse = gameGroupParticipantMapper.toResponse(participant);
+
+        String message = participantResponse.getIsActive() ?
+                messageUtil.getMessage("controller.gamegroupparticipant.activated.success") :
+                messageUtil.getMessage("controller.gamegroupparticipant.deactivated.success");
+
+        return ResponseUtil.okWithSuccess(participantResponse, message);
+    }
+
+    /**
+     * Remove um participante do grupo (rota aninhada).
+     * Exige que o usuário autenticado seja MASTER do grupo do participante.
+     */
+    @DeleteMapping("/{groupId}/participants/{participantId}")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#groupId, authentication.name)")
+    @Operation(summary = "Remover participante do grupo", description = "Remove um participante do grupo de jogo (apenas MASTER/owner)")
+    @ApiResponse(responseCode = "200", description = "Participante removido com sucesso")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode remover participantes")
+    @ApiResponse(responseCode = "404", description = "Participante não encontrado")
+    public ResponseEntity<ResponseApi<Void>> removeParticipantFromGroup(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID groupId,
+            @Parameter(description = "ID do participante") @PathVariable UUID participantId) {
+
+        // Suporta tanto participantId quanto userId na mesma rota.
+        // 1) Tenta remover pelo participantId (se existir e pertencer ao grupo).
+        try {
+            br.com.systemrpg.backend.domain.entity.GameGroupParticipant participant = gameGroupParticipantService.findById(participantId);
+            if (!participant.getGameGroup().getId().equals(groupId)) {
+                throw new br.com.systemrpg.backend.exception.RecordNotFoundException(
+                    messageUtil.getMessage("service.gameGroupParticipant.not.found", new Object[]{participantId}, java.util.Locale.getDefault())
+                );
+            }
+            gameGroupParticipantService.removeParticipant(participantId);
+        } catch (br.com.systemrpg.backend.exception.RecordNotFoundException ex) {
+            // 2) Se não encontrar por participantId, trata como userId vinculado ao grupo.
+            gameGroupParticipantService.removeParticipantByGroupAndUser(groupId, participantId);
+        }
+
+        return ResponseUtil.okWithSuccess(null, messageUtil.getMessage("controller.gamegroupparticipant.deleted.success"));
+    }
+
+    /**
+     * Remove um participante do grupo por userId (rota aninhada de conveniência).
+     * Útil quando o client possui apenas o userId e quer remover o vínculo do grupo.
+     */
+    @DeleteMapping("/{groupId}/participants/by-user/{userId}")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#groupId, authentication.name)")
+    @Operation(summary = "Remover participante do grupo por userId", description = "Remove o participante do grupo usando o ID do usuário (apenas MASTER/owner)")
+    @ApiResponse(responseCode = "200", description = "Participante removido com sucesso")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode remover participantes")
+    @ApiResponse(responseCode = "404", description = "Participante não encontrado no grupo")
+    public ResponseEntity<ResponseApi<Void>> removeParticipantFromGroupByUser(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID groupId,
+            @Parameter(description = "ID do usuário") @PathVariable UUID userId) {
+
+        gameGroupParticipantService.removeParticipantByGroupAndUser(groupId, userId);
+        return ResponseUtil.okWithSuccess(null, messageUtil.getMessage("controller.gamegroupparticipant.deleted.success"));
+    }
+
+    /**
+     * Remove um participante do grupo por username (rota de conveniência).
+     * Útil quando o client possui apenas o username e quer remover o vínculo do grupo.
+     */
+    @DeleteMapping("/{groupId}/participants/by-username/{username}")
+    @PreAuthorize("@gameGroupService.isGroupOwner(#groupId, authentication.name)")
+    @Operation(summary = "Remover participante do grupo por username", description = "Remove o participante do grupo usando o username (apenas MASTER/owner)")
+    @ApiResponse(responseCode = "200", description = "Participante removido com sucesso")
+    @ApiResponse(responseCode = "403", description = "Acesso negado - apenas owner pode remover participantes")
+    @ApiResponse(responseCode = "404", description = "Participante não encontrado no grupo")
+    public ResponseEntity<ResponseApi<Void>> removeParticipantFromGroupByUsername(
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID groupId,
+            @Parameter(description = "Username do usuário") @PathVariable String username) {
+
+        gameGroupParticipantService.removeParticipantByGroupAndUsername(groupId, username);
+        return ResponseUtil.okWithSuccess(null, messageUtil.getMessage("controller.gamegroupparticipant.deleted.success"));
+    }
+
+    /**
      * Constrói a resposta paginada com links HATEOAS para listas de grupos de jogo.
      */
     private PagedHateoasResponse<GameGroupHateoasResponse> buildGameGroupListResponse(Page<GameGroup> gameGroups, Pageable pageable, String basePath, String queryParams) {
@@ -179,10 +302,21 @@ public class GameGroupController {
     @PreAuthorize("@gameGroupService.canViewGroup(#id, authentication.name)")
     @Operation(summary = "Buscar grupo por ID", description = "Busca um grupo de jogo pelo seu ID")
     public ResponseEntity<ResponseApi<GameGroupHateoasResponse>> findById(
-            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id) {
+            @Parameter(description = "ID do grupo de jogo") @PathVariable UUID id,
+            @Parameter(description = "Incluir participantes inativos no retorno") @RequestParam(required = false) Boolean includeInactive) {
         
         GameGroup gameGroup = gameGroupService.findById(id);
         GameGroupResponse gameGroupResponse = gameGroupMapper.toResponse(gameGroup, gameGroupMemberMapper);
+
+        // Se solicitado, incluir participantes inativos (apenas exclui deletados)
+        if (Boolean.TRUE.equals(includeInactive) && gameGroup.getParticipants() != null) {
+            List<br.com.systemrpg.backend.dto.response.GameGroupMemberResponse> allMembers = gameGroup.getParticipants().stream()
+                    .filter(p -> p.getDeletedAt() == null)
+                    .map(gameGroupMemberMapper::toResponse)
+                    .collect(Collectors.toList());
+            gameGroupResponse.setParticipants(allMembers);
+        }
+
         GameGroupHateoasResponse hateoasResponse = gameGroupHateoasMapper.toHateoasResponse(gameGroupResponse);
         
         // Adicionar links HATEOAS

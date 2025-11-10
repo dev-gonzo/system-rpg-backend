@@ -128,6 +128,39 @@ public class UserController {
     }
 
     /**
+     * Busca usuários por texto (username, nome, sobrenome ou email), com paginação.
+     */
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Buscar usuários", description = "Busca usuários por username, nome, sobrenome ou email (case insensitive)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+    public ResponseEntity<ResponseApi<PagedHateoasResponse<UserHateoasResponse>>> searchUsers(
+            @PageableDefault(size = 20) Pageable pageable,
+            @Parameter(description = "Termo de busca para username, nome, sobrenome ou email")
+            @RequestParam(name = "q") String query) {
+
+        Page<User> users = userService.findByName(query, pageable);
+
+        Page<UserResponse> userResponses = users.map(userMapper::toResponse);
+        PagedHateoasResponse<UserHateoasResponse> hateoasResponse = userHateoasMapper.toPagedHateoasResponse(userResponses);
+
+        // Links HATEOAS individuais para cada usuário do resultado
+        addIndividualUserLinks(hateoasResponse, users);
+
+        // Links HATEOAS da coleção e paginação para o endpoint de busca
+        hateoasLinkBuilder.addUserLinks(hateoasResponse);
+        hateoasLinkBuilder.addPaginationLinks(hateoasResponse, pageable, "/users/search", "q=" + query);
+
+        return ResponseUtil.okWithSuccess(
+                hateoasResponse,
+                messageSource.getMessage("controller.user.list.success", null, LocaleContextHolder.getLocale())
+        );
+    }
+
+    /**
      * Busca um usuário por ID.
      */
     @GetMapping("/{id}")

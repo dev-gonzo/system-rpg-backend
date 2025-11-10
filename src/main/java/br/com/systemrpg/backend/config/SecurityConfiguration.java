@@ -70,6 +70,9 @@ public class SecurityConfiguration {
                             .requestMatchers("/error").permitAll()
                             .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                             .requestMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
+                            // Versões sob /api/v1
+                            .requestMatchers("/api/v1/swagger-ui/**", "/api/v1/swagger-ui.html").permitAll()
+                            .requestMatchers("/api/v1/v3/api-docs/**", "/api/v1/api-docs/**").permitAll()
                             .requestMatchers("/swagger-resources/**").permitAll()
                             .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
